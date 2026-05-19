@@ -1,0 +1,51 @@
+{
+  "realm": "buildpay",
+  "enabled": true,
+  "displayName": "BuildPay Africa",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": false,
+  "roles": {
+    "realm": [
+      { "name": "Admin" },
+      { "name": "Customer" },
+      { "name": "Contractor" },
+      { "name": "Supplier" },
+      { "name": "Driver" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "buildpay-api",
+      "name": "BuildPay API",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "buildpay-web",
+      "name": "BuildPay Web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost/*"
+      ],
+      "webOrigins": [
+        "*"
+      ]
+    }
+  ]
+}
+

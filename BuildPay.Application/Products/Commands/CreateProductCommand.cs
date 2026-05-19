@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BuildPay.Application.Common.Interfaces;
 using BuildPay.Domain.Entities;
-using BuildPay.Persistence;
 using FluentValidation;
 using MediatR;
 
@@ -28,9 +28,9 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Guid>
 {
-    private readonly BuildPayDbContext _context;
+    private readonly IBuildPayDbContext _context;
 
-    public CreateProductCommandHandler(BuildPayDbContext context)
+    public CreateProductCommandHandler(IBuildPayDbContext context)
     {
         _context = context;
     }

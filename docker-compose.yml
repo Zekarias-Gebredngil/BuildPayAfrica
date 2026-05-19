@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - buildpay-network
 
@@ -42,6 +43,44 @@ services:
     command: start-dev --import-realm
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    networks:
+      - buildpay-network
+
+  api:
+    build:
+      context: .
+      dockerfile: BuildPay.API/Dockerfile
+    container_name: buildpay-api
+    environment:
+      ASPNETCORE_URLS: http://+:8081
+      ConnectionStrings__DefaultConnection: Host=db;Database=buildpay_db;Username=postgres;Password=Password123!
+      Keycloak__Authority: http://keycloak:8080/realms/buildpay
+      Keycloak__Audience: buildpay-api
+      Keycloak__BaseUrl: http://keycloak:8080
+      Keycloak__Realm: buildpay
+      Keycloak__AdminRealm: master
+      Keycloak__AdminClientId: admin-cli
+      Keycloak__AdminUsername: admin
+      Keycloak__AdminPassword: admin
+      Keycloak__PublicClientId: buildpay-web
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+      - redis
+      - keycloak
+    networks:
+      - buildpay-network
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: buildpay-web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
     networks:
       - buildpay-network
 
