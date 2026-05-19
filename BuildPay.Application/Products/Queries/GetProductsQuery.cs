@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildPay.Application.DTOs;
-using BuildPay.Persistence;
+using BuildPay.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,9 +14,9 @@ public record GetProductsQuery : IRequest<List<ProductDto>>;
 
 public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, List<ProductDto>>
 {
-    private readonly BuildPayDbContext _context;
+    private readonly IBuildPayDbContext _context;
 
-    public GetProductsQueryHandler(BuildPayDbContext context)
+    public GetProductsQueryHandler(IBuildPayDbContext context)
     {
         _context = context;
     }
