@@ -11,4 +11,5 @@ public class Contractor
     public string LicenseNumber { get; set; } = string.Empty;
     public decimal Rating { get; set; }
     public VerificationStatus VerificationStatus { get; set; }
+    public List<ContractorDocument> Documents { get; set; } = new();
 }
