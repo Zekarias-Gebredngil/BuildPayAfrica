@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildPay.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildPay.Persistence", "BuildPay.Persistence\BuildPay.Persistence.csproj", "{C8B6E28C-2607-46A1-9E85-17D1EC55C2F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildPay.Application.Tests", "BuildPay.Application.Tests\BuildPay.Application.Tests.csproj", "{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{C8B6E28C-2607-46A1-9E85-17D1EC55C2F2}.Release|x64.Build.0 = Release|Any CPU
 		{C8B6E28C-2607-46A1-9E85-17D1EC55C2F2}.Release|x86.ActiveCfg = Release|Any CPU
 		{C8B6E28C-2607-46A1-9E85-17D1EC55C2F2}.Release|x86.Build.0 = Release|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Debug|x64.Build.0 = Debug|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Debug|x86.Build.0 = Debug|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Release|x64.ActiveCfg = Release|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Release|x64.Build.0 = Release|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Release|x86.ActiveCfg = Release|Any CPU
+		{6B3C5A5F-3BCE-4E3C-93F9-6D600A7A2C2C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
