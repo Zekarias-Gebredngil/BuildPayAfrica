@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BuildPay.Domain.Entities;
 using BuildPay.Domain.Enums;
-using BuildPay.Persistence;
+using BuildPay.Application.Common.Interfaces;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -24,9 +24,9 @@ public sealed class FundEscrowCommandValidator : AbstractValidator<FundEscrowCom
 
 public sealed class FundEscrowCommandHandler : IRequestHandler<FundEscrowCommand, Guid>
 {
-    private readonly BuildPayDbContext _context;
+    private readonly IBuildPayDbContext _context;
 
-    public FundEscrowCommandHandler(BuildPayDbContext context)
+    public FundEscrowCommandHandler(IBuildPayDbContext context)
     {
         _context = context;
     }

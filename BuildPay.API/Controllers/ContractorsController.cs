@@ -38,7 +38,7 @@ public sealed class ContractorsController : ControllerBase
             new SubmitContractorVerificationCommand(
                 userId,
                 request.LicenseNumber,
-                request.Documents.Select(d => new SubmitContractorVerificationCommand.SubmitContractorDocument(d.DocumentType, d.FileUrl)).ToList()),
+                request.Documents.Select(d => new SubmitContractorDocument(d.DocumentType, d.FileUrl)).ToList()),
             cancellationToken);
 
         return Ok(new { contractorId });
@@ -57,10 +57,9 @@ public sealed class ContractorsController : ControllerBase
         return NoContent();
     }
 
-    public sealed record SubmitVerificationRequest(string LicenseNumber, List<SubmitDocumentRequest> Documents)
-    {
-        public sealed record SubmitDocumentRequest(ContractorDocumentType DocumentType, string FileUrl);
-    }
+    public sealed record SubmitVerificationRequest(string LicenseNumber, List<SubmitDocumentRequest> Documents);
+
+    public sealed record SubmitDocumentRequest(ContractorDocumentType DocumentType, string FileUrl);
 
     public sealed record SetVerificationStatusRequest(VerificationStatus Status);
 }

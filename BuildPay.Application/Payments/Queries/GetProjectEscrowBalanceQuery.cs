@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildPay.Domain.Enums;
-using BuildPay.Persistence;
+using BuildPay.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +13,9 @@ public sealed record GetProjectEscrowBalanceQuery(Guid ProjectId) : IRequest<dec
 
 public sealed class GetProjectEscrowBalanceQueryHandler : IRequestHandler<GetProjectEscrowBalanceQuery, decimal>
 {
-    private readonly BuildPayDbContext _context;
+    private readonly IBuildPayDbContext _context;
 
-    public GetProjectEscrowBalanceQueryHandler(BuildPayDbContext context)
+    public GetProjectEscrowBalanceQueryHandler(IBuildPayDbContext context)
     {
         _context = context;
     }
