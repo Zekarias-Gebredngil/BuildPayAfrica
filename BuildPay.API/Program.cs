@@ -37,7 +37,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<BuildPayDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly(typeof(BuildPayDbContext).Assembly.FullName)));
+        b => b.MigrationsAssembly("BuildPay.Persistence")));
 builder.Services.AddScoped<IBuildPayDbContext>(provider => provider.GetRequiredService<BuildPayDbContext>());
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateProductCommand>());
