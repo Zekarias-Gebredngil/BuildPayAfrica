@@ -7,6 +7,7 @@ COPY BuildPay.Application/BuildPay.Application.csproj BuildPay.Application/
 COPY BuildPay.Domain/BuildPay.Domain.csproj BuildPay.Domain/
 COPY BuildPay.Infrastructure/BuildPay.Infrastructure.csproj BuildPay.Infrastructure/
 COPY BuildPay.Persistence/BuildPay.Persistence.csproj BuildPay.Persistence/
+COPY BuildPay.Application.Tests/BuildPay.Application.Tests.csproj BuildPay.Application.Tests/
 
 RUN dotnet restore ./BuildPay.sln
 
