@@ -1,0 +1,6 @@
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.csproj.AssemblyReference.cache
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.AssemblyInfoInputs.cache
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.AssemblyInfo.cs
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.csproj.CoreCompileInputs.cache
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.sourcelink.json

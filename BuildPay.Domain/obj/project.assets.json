@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\user\\.gemini\\antigravity\\scratch\\BuildPayAfrica\\BuildPay.Domain\\BuildPay.Domain.csproj",
+      "projectUniqueName": "C:\\Users\\user\\BuildPayAfrica\\BuildPay.Domain\\BuildPay.Domain.csproj",
       "projectName": "BuildPay.Domain",
-      "projectPath": "C:\\Users\\user\\.gemini\\antigravity\\scratch\\BuildPayAfrica\\BuildPay.Domain\\BuildPay.Domain.csproj",
+      "projectPath": "C:\\Users\\user\\BuildPayAfrica\\BuildPay.Domain\\BuildPay.Domain.csproj",
       "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\user\\.gemini\\antigravity\\scratch\\BuildPayAfrica\\BuildPay.Domain\\obj\\",
+      "outputPath": "C:\\Users\\user\\BuildPayAfrica\\BuildPay.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config"
