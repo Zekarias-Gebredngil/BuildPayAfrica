@@ -3,6 +3,7 @@ using BuildPay.API.Security;
 using BuildPay.API.Middleware;
 using BuildPay.Application.Common.Behaviors;
 using BuildPay.Application.Products.Commands;
+using BuildPay.Application.Common.Interfaces;
 using BuildPay.Infrastructure.Keycloak;
 using BuildPay.Persistence;
 using FluentValidation;
@@ -35,7 +36,9 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddDbContext<BuildPayDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("BuildPay.Persistence")));
+builder.Services.AddScoped<IBuildPayDbContext>(provider => provider.GetRequiredService<BuildPayDbContext>());
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateProductCommand>());
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductCommandValidator>();
@@ -83,9 +86,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("default");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "uploads")),
+    FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 app.UseAuthentication();

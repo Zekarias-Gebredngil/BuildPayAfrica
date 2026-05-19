@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BuildPay.Domain.Entities;
 using BuildPay.Domain.Enums;
-using BuildPay.Persistence;
+using BuildPay.Application.Common.Interfaces;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -24,9 +24,9 @@ public sealed class ApproveMilestoneReleaseCommandValidator : AbstractValidator<
 
 public sealed class ApproveMilestoneReleaseCommandHandler : IRequestHandler<ApproveMilestoneReleaseCommand, Guid>
 {
-    private readonly BuildPayDbContext _context;
+    private readonly IBuildPayDbContext _context;
 
-    public ApproveMilestoneReleaseCommandHandler(BuildPayDbContext context)
+    public ApproveMilestoneReleaseCommandHandler(IBuildPayDbContext context)
     {
         _context = context;
     }
@@ -76,7 +76,7 @@ public sealed class ApproveMilestoneReleaseCommandHandler : IRequestHandler<Appr
         return tx.Id;
     }
 
-    private static async Task<decimal> GetProjectEscrowBalance(BuildPayDbContext context, Guid projectId, CancellationToken cancellationToken)
+    private static async Task<decimal> GetProjectEscrowBalance(IBuildPayDbContext context, Guid projectId, CancellationToken cancellationToken)
     {
         var deposits = await context.Transactions
             .Where(t => t.ProjectId == projectId && t.Status == TransactionStatus.Completed && t.TransactionType == "EscrowDeposit")

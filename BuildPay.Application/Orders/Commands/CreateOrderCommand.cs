@@ -12,10 +12,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BuildPay.Application.Orders.Commands;
 
-public sealed record CreateOrderCommand(Guid CustomerId, List<CreateOrderItem> Items) : IRequest<Guid>
-{
-    public sealed record CreateOrderItem(Guid ProductId, int Quantity);
-}
+public sealed record CreateOrderCommand(Guid CustomerId, List<CreateOrderItem> Items) : IRequest<Guid>;
+
+public sealed record CreateOrderItem(Guid ProductId, int Quantity);
 
 public sealed class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 {

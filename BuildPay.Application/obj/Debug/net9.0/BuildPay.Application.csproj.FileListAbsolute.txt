@@ -1,0 +1,16 @@
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.csproj.AssemblyReference.cache
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.AssemblyInfoInputs.cache
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.AssemblyInfo.cs
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.csproj.CoreCompileInputs.cache
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.sourcelink.json
+C:\Users\user\BuildPayAfrica\BuildPay.Application\bin\Debug\net9.0\BuildPay.Application.deps.json
+C:\Users\user\BuildPayAfrica\BuildPay.Application\bin\Debug\net9.0\BuildPay.Application.dll
+C:\Users\user\BuildPayAfrica\BuildPay.Application\bin\Debug\net9.0\BuildPay.Application.pdb
+C:\Users\user\BuildPayAfrica\BuildPay.Application\bin\Debug\net9.0\BuildPay.Domain.dll
+C:\Users\user\BuildPayAfrica\BuildPay.Application\bin\Debug\net9.0\BuildPay.Domain.pdb
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.33538047.Up2Date
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.dll
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\refint\BuildPay.Application.dll
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\BuildPay.Application.pdb
+C:\Users\user\BuildPayAfrica\BuildPay.Application\obj\Debug\net9.0\ref\BuildPay.Application.dll

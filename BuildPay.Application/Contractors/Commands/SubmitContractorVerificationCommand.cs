@@ -15,10 +15,9 @@ namespace BuildPay.Application.Contractors.Commands;
 public sealed record SubmitContractorVerificationCommand(
     Guid UserId,
     string LicenseNumber,
-    List<SubmitContractorDocument> Documents) : IRequest<Guid>
-{
-    public sealed record SubmitContractorDocument(ContractorDocumentType DocumentType, string FileUrl);
-}
+    List<SubmitContractorDocument> Documents) : IRequest<Guid>;
+
+public sealed record SubmitContractorDocument(ContractorDocumentType DocumentType, string FileUrl);
 
 public sealed class SubmitContractorVerificationCommandValidator : AbstractValidator<SubmitContractorVerificationCommand>
 {

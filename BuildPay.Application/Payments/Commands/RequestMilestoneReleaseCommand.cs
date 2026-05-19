@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildPay.Domain.Enums;
-using BuildPay.Persistence;
+using BuildPay.Application.Common.Interfaces;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -22,9 +22,9 @@ public sealed class RequestMilestoneReleaseCommandValidator : AbstractValidator<
 
 public sealed class RequestMilestoneReleaseCommandHandler : IRequestHandler<RequestMilestoneReleaseCommand, bool>
 {
-    private readonly BuildPayDbContext _context;
+    private readonly IBuildPayDbContext _context;
 
-    public RequestMilestoneReleaseCommandHandler(BuildPayDbContext context)
+    public RequestMilestoneReleaseCommandHandler(IBuildPayDbContext context)
     {
         _context = context;
     }

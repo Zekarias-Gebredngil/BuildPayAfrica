@@ -29,7 +29,7 @@ public sealed class OrdersController : ControllerBase
         var id = await _mediator.Send(
             new CreateOrderCommand(
                 customerId,
-                request.Items.Select(i => new CreateOrderCommand.CreateOrderItem(i.ProductId, i.Quantity)).ToList()),
+                request.Items.Select(i => new CreateOrderItem(i.ProductId, i.Quantity)).ToList()),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id }, new { id });
@@ -70,10 +70,9 @@ public sealed class OrdersController : ControllerBase
         return NoContent();
     }
 
-    public sealed record CreateOrderRequest(List<CreateOrderItemRequest> Items)
-    {
-        public sealed record CreateOrderItemRequest(Guid ProductId, int Quantity);
-    }
+    public sealed record CreateOrderRequest(List<CreateOrderItemRequest> Items);
+
+    public sealed record CreateOrderItemRequest(Guid ProductId, int Quantity);
 
     public sealed record UpdateOrderStatusRequest(OrderStatus Status);
 }
