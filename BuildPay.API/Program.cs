@@ -3,6 +3,7 @@ using BuildPay.API.Security;
 using BuildPay.API.Middleware;
 using BuildPay.Application.Common.Behaviors;
 using BuildPay.Application.Products.Commands;
+using BuildPay.Application.Common.Interfaces;
 using BuildPay.Infrastructure.Keycloak;
 using BuildPay.Persistence;
 using FluentValidation;
@@ -36,6 +37,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<BuildPayDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IBuildPayDbContext>(provider => provider.GetRequiredService<BuildPayDbContext>());
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateProductCommand>());
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductCommandValidator>();
