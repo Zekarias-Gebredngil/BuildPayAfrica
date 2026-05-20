@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -11,9 +11,10 @@ import { AuthService } from '../../core/auth/auth.service';
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
-  private readonly fb   = inject(FormBuilder);
-  private readonly auth = inject(AuthService);
+  private readonly fb     = inject(FormBuilder);
+  private readonly auth   = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route  = inject(ActivatedRoute);
 
   loading = false;
   error: string | null = null;
@@ -35,7 +36,9 @@ export class LoginComponent {
     this.auth.login(email!, password!).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigateByUrl('/');
+        // Redirect to the originally requested URL, or home
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+        this.router.navigateByUrl(returnUrl);
       },
       error: (e) => {
         this.loading = false;

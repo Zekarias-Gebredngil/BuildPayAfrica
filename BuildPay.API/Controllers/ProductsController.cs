@@ -10,6 +10,7 @@ namespace BuildPay.API.Controllers;
 
 [ApiController]
 [Route("api/products")]
+[Authorize]
 public sealed class ProductsController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -29,6 +29,7 @@ public sealed class PaymentsController : ControllerBase
     }
 
     [HttpGet("projects/{projectId:guid}/balance")]
+    [Authorize(Roles = "Customer,Contractor,Admin")]
     public async Task<ActionResult<object>> GetProjectBalance(Guid projectId, CancellationToken cancellationToken)
     {
         var balance = await _mediator.Send(new GetProjectEscrowBalanceQuery(projectId), cancellationToken);

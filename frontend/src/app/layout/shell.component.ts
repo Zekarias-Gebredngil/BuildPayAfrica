@@ -15,7 +15,7 @@ export class ShellComponent {
   readonly isAuthed  = computed(() => this.auth.isAuthenticated);
   readonly roles     = computed(() => this.auth.roles);
   readonly isAdmin   = computed(() => this.auth.roles.includes('Admin'));
-  readonly userName  = computed(() => this.auth['state$']?.value?.payload?.name ?? this.auth['state$']?.value?.payload?.preferred_username ?? '');
+  readonly userName  = computed(() => this.auth.displayName);
 
   mobileOpen = signal(false);
 

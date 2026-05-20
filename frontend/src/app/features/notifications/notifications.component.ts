@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 type NotificationDto = {
   id: string;
@@ -37,14 +39,27 @@ export class NotificationsComponent {
 
   markRead(id: string) {
     this.http.post(`/api/notifications/${id}/read`, {}).subscribe({
-      next:  () => this.load(),
-      error: ()  => (this.error = 'Failed to mark as read')
+      next: () => {
+        // Update locally — no full reload needed for a single mark-read
+        const n = this.notifications.find(x => x.id === id);
+        if (n) n.isRead = true;
+      },
+      error: () => (this.error = 'Failed to mark as read')
     });
   }
 
   markAllRead() {
     const unread = this.notifications.filter(n => !n.isRead);
-    unread.forEach(n => this.markRead(n.id));
+    if (!unread.length) return;
+
+    // Fire all in parallel, then do a single reload when all complete
+    forkJoin(
+      unread.map(n =>
+        this.http.post(`/api/notifications/${n.id}/read`, {}).pipe(
+          catchError(() => of(null))  // don't let one failure abort the rest
+        )
+      )
+    ).subscribe(() => this.load());
   }
 
   get filtered(): NotificationDto[] {
