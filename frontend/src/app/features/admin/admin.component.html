@@ -1,0 +1,251 @@
+<!-- Page Header -->
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <div class="bp-page-header" style="margin: 0;">
+    <h2>⚙️ Admin Dashboard</h2>
+    <p>Platform overview, user management, and verification approvals.</p>
+  </div>
+  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="bp-loading-state">
+  <div class="bp-spinner"></div>
+  Loading dashboard…
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">⚠️ {{ error }}</div>
+
+<div *ngIf="!loading">
+
+  <!-- Stats Grid -->
+  <div *ngIf="overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+
+    <div class="bp-stat-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">{{ overview.users | number }}</div>
+          <div class="stat-sub">Registered accounts</div>
+        </div>
+        <div class="stat-icon" style="background: #dbeafe; color: #1d4ed8;">👥</div>
+      </div>
+    </div>
+
+    <div class="bp-stat-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div class="stat-label">Pending Verifications</div>
+          <div class="stat-value" [style.color]="overview.contractorsPending > 0 ? 'var(--bp-warning)' : 'inherit'">
+            {{ overview.contractorsPending }}
+          </div>
+          <div class="stat-sub">Awaiting approval</div>
+        </div>
+        <div class="stat-icon" style="background: #fef3c7; color: #92400e;">⏳</div>
+      </div>
+    </div>
+
+    <div class="bp-stat-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div class="stat-label">Active Projects</div>
+          <div class="stat-value">{{ overview.projects | number }}</div>
+          <div class="stat-sub">Across all customers</div>
+        </div>
+        <div class="stat-icon" style="background: #d1fae5; color: #065f46;">🏗️</div>
+      </div>
+    </div>
+
+    <div class="bp-stat-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value">{{ overview.orders | number }}</div>
+          <div class="stat-sub">Marketplace orders</div>
+        </div>
+        <div class="stat-icon" style="background: #ede9fe; color: #5b21b6;">📦</div>
+      </div>
+    </div>
+
+    <div class="bp-stat-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div class="stat-label">Products Listed</div>
+          <div class="stat-value">{{ overview.products | number }}</div>
+          <div class="stat-sub">From all suppliers</div>
+        </div>
+        <div class="stat-icon" style="background: #fce7f3; color: #9d174d;">🏪</div>
+      </div>
+    </div>
+
+    <div class="bp-stat-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+          <div class="stat-label">Deliveries</div>
+          <div class="stat-value">{{ overview.deliveries | number }}</div>
+          <div class="stat-sub">Total dispatched</div>
+        </div>
+        <div class="stat-icon" style="background: #ecfdf5; color: #065f46;">🚚</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bp-tabs">
+    <button class="bp-tab" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">
+      📊 Overview
+    </button>
+    <button class="bp-tab" [class.active]="activeTab === 'verifications'" (click)="activeTab = 'verifications'">
+      ✅ Verifications
+      <span *ngIf="pending.length > 0" class="bp-badge bp-badge-yellow" style="margin-left: 0.375rem;">{{ pending.length }}</span>
+    </button>
+    <button class="bp-tab" [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">
+      👥 Users
+    </button>
+    <button class="bp-tab" [class.active]="activeTab === 'transactions'" (click)="activeTab = 'transactions'">
+      💳 Transactions
+    </button>
+  </div>
+
+  <!-- ── Overview Tab ───────────────────────────────────────────────── -->
+  <div *ngIf="activeTab === 'overview'" class="bp-fade-in">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+      <!-- System Health -->
+      <div class="bp-section">
+        <div class="bp-section-header">
+          <div><h3>System Health</h3><p>Real-time platform status</p></div>
+          <span class="bp-badge bp-badge-green">● All Systems Operational</span>
+        </div>
+        <div class="bp-section-body" style="display: flex; flex-direction: column; gap: 0.875rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.875rem;">API Gateway</span>
+            <span class="bp-badge bp-badge-green">Healthy</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.875rem;">Database</span>
+            <span class="bp-badge bp-badge-green">Healthy</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.875rem;">Payment Gateway</span>
+            <span class="bp-badge bp-badge-green">Healthy</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.875rem;">Notification Service</span>
+            <span class="bp-badge bp-badge-green">Healthy</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.875rem;">File Storage</span>
+            <span class="bp-badge bp-badge-yellow">Degraded</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bp-section">
+        <div class="bp-section-header">
+          <div><h3>Quick Actions</h3><p>Common admin tasks</p></div>
+        </div>
+        <div class="bp-section-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <button class="bp-btn bp-btn-ghost" style="justify-content: flex-start;" (click)="activeTab = 'verifications'">
+            ✅ Review Pending Verifications ({{ pending.length }})
+          </button>
+          <button class="bp-btn bp-btn-ghost" style="justify-content: flex-start;" (click)="activeTab = 'users'">
+            👥 Manage Users
+          </button>
+          <button class="bp-btn bp-btn-ghost" style="justify-content: flex-start;" (click)="activeTab = 'transactions'">
+            💳 View Transactions
+          </button>
+          <button class="bp-btn bp-btn-ghost" style="justify-content: flex-start;" (click)="load()">
+            ↻ Refresh All Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Verifications Tab ──────────────────────────────────────────── -->
+  <div *ngIf="activeTab === 'verifications'" class="bp-fade-in">
+
+    <div *ngIf="pending.length === 0" class="bp-card">
+      <div class="bp-empty-state">
+        <div class="bp-empty-icon">✅</div>
+        <h3>All caught up!</h3>
+        <p>No pending contractor verifications at this time.</p>
+      </div>
+    </div>
+
+    <div *ngIf="pending.length > 0" class="bp-section">
+      <div class="bp-section-header">
+        <div>
+          <h3>Pending Contractor Verifications</h3>
+          <p>Review and approve or reject contractor applications.</p>
+        </div>
+        <span class="bp-badge bp-badge-yellow">{{ pending.length }} pending</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="bp-table">
+          <thead>
+            <tr>
+              <th>Contractor ID</th>
+              <th>License Number</th>
+              <th>Rating</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of pending">
+              <td>
+                <div style="font-family: monospace; font-size: 0.8125rem; color: var(--bp-text-muted);">
+                  {{ c.id | slice:0:12 }}…
+                </div>
+              </td>
+              <td style="font-weight: 500;">{{ c.licenseNumber }}</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                  <span style="color: #f59e0b;">★</span>
+                  {{ c.rating | number:'1.1-1' }}
+                </div>
+              </td>
+              <td><span class="bp-badge bp-badge-yellow">{{ c.verificationStatus }}</span></td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="bp-btn bp-btn-success bp-btn-sm" (click)="setStatus(c.id, 'Approved')">
+                    ✅ Approve
+                  </button>
+                  <button class="bp-btn bp-btn-danger bp-btn-sm" (click)="setStatus(c.id, 'Rejected')">
+                    ✕ Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Users Tab ──────────────────────────────────────────────────── -->
+  <div *ngIf="activeTab === 'users'" class="bp-fade-in">
+    <div class="bp-card">
+      <div class="bp-empty-state">
+        <div class="bp-empty-icon">👥</div>
+        <h3>User Management</h3>
+        <p>Full user management with role-based filtering is available via the API. UI coming soon.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Transactions Tab ───────────────────────────────────────────── -->
+  <div *ngIf="activeTab === 'transactions'" class="bp-fade-in">
+    <div class="bp-card">
+      <div class="bp-empty-state">
+        <div class="bp-empty-icon">💳</div>
+        <h3>Transaction Monitoring</h3>
+        <p>View all platform transactions, escrow locks, and payment releases. Full analytics coming soon.</p>
+      </div>
+    </div>
+  </div>
+
+</div>

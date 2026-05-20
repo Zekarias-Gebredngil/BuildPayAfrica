@@ -76,7 +76,15 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
             content,
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            // Throw with the actual HTTP status so the middleware can map it correctly
+            throw new HttpRequestException(
+                $"Keycloak token endpoint returned {(int)response.StatusCode}",
+                inner: null,
+                statusCode: response.StatusCode);
+        }
+
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         return JsonSerializer.Deserialize<KeycloakTokenResponse>(json) ?? new KeycloakTokenResponse();
     }

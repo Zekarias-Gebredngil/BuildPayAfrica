@@ -1,0 +1,181 @@
+<div class="min-h-screen" style="background: var(--bp-bg);">
+
+  <!-- ── Top Navigation ─────────────────────────────────────────────── -->
+  <header style="
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--bp-border);
+    box-shadow: 0 1px 3px rgb(0 0 0 / .06);
+  ">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 4rem; gap: 1rem;">
+
+        <!-- Logo -->
+        <a routerLink="/" (click)="closeMobile()" style="
+          display: flex; align-items: center; gap: 0.625rem;
+          text-decoration: none; flex-shrink: 0;
+        ">
+          <div style="
+            width: 2rem; height: 2rem; border-radius: 0.5rem;
+            background: var(--bp-primary);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 800; font-size: 0.875rem;
+          ">BP</div>
+          <span style="font-size: 1.0625rem; font-weight: 700; color: var(--bp-text);">
+            BuildPay <span style="color: var(--bp-primary);">Africa</span>
+          </span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <nav style="display: flex; align-items: center; gap: 0.25rem;" class="desktop-nav">
+          <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}"
+             (click)="closeMobile()" class="nav-link">Home</a>
+          <a routerLink="/marketplace" routerLinkActive="nav-active"
+             (click)="closeMobile()" class="nav-link">Marketplace</a>
+          <a routerLink="/projects" routerLinkActive="nav-active"
+             (click)="closeMobile()" class="nav-link">Projects</a>
+          <a routerLink="/orders" routerLinkActive="nav-active"
+             (click)="closeMobile()" class="nav-link">Orders</a>
+          <a routerLink="/notifications" routerLinkActive="nav-active"
+             (click)="closeMobile()" class="nav-link">Notifications</a>
+          <a *ngIf="isAdmin()" routerLink="/admin" routerLinkActive="nav-active"
+             (click)="closeMobile()" class="nav-link">Admin</a>
+        </nav>
+
+        <!-- Right Actions -->
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+
+          <!-- Cart icon (authenticated) -->
+          <a *ngIf="isAuthed()" routerLink="/cart" style="
+            width: 2.25rem; height: 2.25rem; border-radius: 0.5rem;
+            border: 1px solid var(--bp-border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--bp-text-muted); text-decoration: none;
+            transition: all 0.15s;
+          " title="Cart">
+            🛒
+          </a>
+
+          <!-- User avatar / login -->
+          <ng-container *ngIf="isAuthed(); else loginBtn">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div class="bp-avatar" style="width: 2.25rem; height: 2.25rem; font-size: 0.75rem; background: var(--bp-primary-light); color: var(--bp-primary);">
+                {{ initials }}
+              </div>
+              <button (click)="logout()" class="bp-btn bp-btn-ghost bp-btn-sm">
+                Sign out
+              </button>
+            </div>
+          </ng-container>
+          <ng-template #loginBtn>
+            <a routerLink="/login" class="bp-btn bp-btn-primary bp-btn-sm">Sign in</a>
+            <a routerLink="/register" class="bp-btn bp-btn-secondary bp-btn-sm" style="display: none;" id="reg-btn">Register</a>
+          </ng-template>
+
+          <!-- Mobile hamburger -->
+          <button (click)="toggleMobile()" class="mobile-menu-btn" aria-label="Toggle menu">
+            <span *ngIf="!mobileOpen()">☰</span>
+            <span *ngIf="mobileOpen()">✕</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div *ngIf="mobileOpen()" style="
+      border-top: 1px solid var(--bp-border);
+      background: #fff;
+      padding: 1rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.25rem;
+    " class="mobile-nav">
+      <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}"
+         (click)="closeMobile()" class="mobile-nav-link">🏠 Home</a>
+      <a routerLink="/marketplace" routerLinkActive="nav-active"
+         (click)="closeMobile()" class="mobile-nav-link">🏪 Marketplace</a>
+      <a routerLink="/projects" routerLinkActive="nav-active"
+         (click)="closeMobile()" class="mobile-nav-link">📋 Projects</a>
+      <a routerLink="/orders" routerLinkActive="nav-active"
+         (click)="closeMobile()" class="mobile-nav-link">📦 Orders</a>
+      <a routerLink="/notifications" routerLinkActive="nav-active"
+         (click)="closeMobile()" class="mobile-nav-link">🔔 Notifications</a>
+      <a *ngIf="isAdmin()" routerLink="/admin" routerLinkActive="nav-active"
+         (click)="closeMobile()" class="mobile-nav-link">⚙️ Admin</a>
+      <hr class="bp-divider">
+      <ng-container *ngIf="isAuthed(); else mobileLogin">
+        <button (click)="logout()" class="bp-btn bp-btn-ghost" style="justify-content: flex-start;">Sign out</button>
+      </ng-container>
+      <ng-template #mobileLogin>
+        <a routerLink="/login" (click)="closeMobile()" class="bp-btn bp-btn-primary">Sign in</a>
+        <a routerLink="/register" (click)="closeMobile()" class="bp-btn bp-btn-secondary" style="margin-top: 0.5rem;">Register</a>
+      </ng-template>
+    </div>
+  </header>
+
+  <!-- ── Main Content ────────────────────────────────────────────────── -->
+  <main style="max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem;">
+    <router-outlet />
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <footer style="
+    border-top: 1px solid var(--bp-border);
+    background: #fff;
+    margin-top: 4rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--bp-text-muted);
+  ">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+      <span>© 2025 BuildPay Africa. Smart construction procurement &amp; payments.</span>
+      <div style="display: flex; gap: 1.5rem;">
+        <a routerLink="/about" style="color: var(--bp-text-muted); text-decoration: none;">About</a>
+        <a routerLink="/marketplace" style="color: var(--bp-text-muted); text-decoration: none;">Marketplace</a>
+        <a routerLink="/projects" style="color: var(--bp-text-muted); text-decoration: none;">Projects</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<style>
+  .nav-link {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bp-text-muted);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-link:hover { color: var(--bp-primary); background: var(--bp-primary-light); }
+  .nav-active { color: var(--bp-primary) !important; background: var(--bp-primary-light); }
+
+  .mobile-nav-link {
+    padding: 0.75rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--bp-text);
+    text-decoration: none;
+    display: block;
+    transition: background 0.15s;
+  }
+  .mobile-nav-link:hover { background: #f8fafc; }
+
+  .mobile-menu-btn {
+    display: none;
+    width: 2.25rem; height: 2.25rem;
+    border: 1px solid var(--bp-border);
+    border-radius: 0.5rem;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.125rem;
+    align-items: center; justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .desktop-nav { display: none !important; }
+    .mobile-menu-btn { display: flex !important; }
+  }
+</style>

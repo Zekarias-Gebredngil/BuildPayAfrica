@@ -1,0 +1,127 @@
+<!-- Page Header -->
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <div class="bp-page-header" style="margin: 0;">
+    <h2>Projects</h2>
+    <p>Create and manage your construction projects with milestones and escrow.</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a routerLink="/contractor/verification" class="bp-btn bp-btn-ghost bp-btn-sm">
+      👷 Contractor Verification
+    </a>
+    <button class="bp-btn bp-btn-primary bp-btn-sm" (click)="showForm = !showForm">
+      {{ showForm ? '✕ Cancel' : '+ New Project' }}
+    </button>
+  </div>
+</div>
+
+<!-- Create Project Form -->
+<div *ngIf="showForm" class="bp-section bp-fade-in" style="margin-bottom: 1.5rem;">
+  <div class="bp-section-header">
+    <div>
+      <h3>New Project</h3>
+      <p>Fill in the details to create a new construction project.</p>
+    </div>
+  </div>
+  <div class="bp-section-body">
+    <form [formGroup]="form" (ngSubmit)="create()" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+      <div class="bp-form-group">
+        <label class="bp-label">Project Name</label>
+        <input class="bp-input" placeholder="e.g. Nairobi Office Block" formControlName="name" />
+        <span *ngIf="form.get('name')?.invalid && form.get('name')?.touched"
+              style="font-size: 0.75rem; color: var(--bp-danger);">
+          Name must be at least 3 characters.
+        </span>
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Budget (KES)</label>
+        <input class="bp-input" type="number" placeholder="e.g. 500000" formControlName="budget" min="1" />
+        <span *ngIf="form.get('budget')?.invalid && form.get('budget')?.touched"
+              style="font-size: 0.75rem; color: var(--bp-danger);">
+          Budget must be greater than 0.
+        </span>
+      </div>
+      <button class="bp-btn bp-btn-primary" [disabled]="form.invalid || creating" style="height: 2.625rem;">
+        <span *ngIf="creating" class="bp-spinner" style="width: 1rem; height: 1rem; border-width: 2px; border-top-color: #fff;"></span>
+        {{ creating ? 'Creating…' : 'Create Project' }}
+      </button>
+    </form>
+    <div *ngIf="createError" class="bp-alert bp-alert-error" style="margin-top: 1rem;">⚠️ {{ createError }}</div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="bp-loading-state">
+  <div class="bp-spinner"></div>
+  Loading projects…
+</div>
+
+<!-- Error -->
+<div *ngIf="error && !loading" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">⚠️ {{ error }}</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && !error && projects.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">📋</div>
+    <h3>No projects yet</h3>
+    <p>Create your first project to start managing milestones and escrow payments.</p>
+    <button class="bp-btn bp-btn-primary" style="margin-top: 1rem;" (click)="showForm = true">
+      + Create First Project
+    </button>
+  </div>
+</div>
+
+<!-- Projects Grid -->
+<div *ngIf="!loading && projects.length > 0" style="display: grid; gap: 1rem;">
+  <a
+    *ngFor="let p of projects"
+    [routerLink]="['/projects', p.id]"
+    class="bp-card bp-fade-in"
+    style="
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.15s, box-shadow 0.15s;
+    "
+    onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--bp-shadow-md)'"
+    onmouseleave="this.style.transform='';this.style.boxShadow=''"
+  >
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <div style="
+            width: 2.5rem; height: 2.5rem; border-radius: 0.625rem;
+            background: var(--bp-primary-light);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.125rem; flex-shrink: 0;
+          ">🏗️</div>
+          <div>
+            <h3 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--bp-text);">{{ p.name }}</h3>
+            <div style="font-size: 0.75rem; color: var(--bp-text-muted); margin-top: 0.125rem;">
+              ID: {{ p.id | slice:0:8 }}…
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="text-align: right;">
+          <div style="font-size: 0.75rem; color: var(--bp-text-muted);">Budget</div>
+          <div style="font-size: 1rem; font-weight: 700; color: var(--bp-text);">
+            KES {{ p.budget | number:'1.0-0' }}
+          </div>
+        </div>
+        <span class="bp-badge" [ngClass]="statusColor(p.status)">{{ p.status }}</span>
+        <span style="font-size: 0.75rem; color: var(--bp-text-muted);">
+          {{ p.contractorId ? '👷 Contractor assigned' : '⏳ No contractor' }}
+        </span>
+        <span style="color: var(--bp-primary); font-size: 1.125rem;">→</span>
+      </div>
+    </div>
+  </a>
+</div>
+
+<!-- Refresh -->
+<div *ngIf="!loading && projects.length > 0" style="margin-top: 1rem; text-align: right;">
+  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+</div>

@@ -1,0 +1,234 @@
+<!-- ── Hero ──────────────────────────────────────────────────────────── -->
+<section style="
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+  border-radius: 1.25rem;
+  padding: 4rem 2.5rem;
+  color: #fff;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+">
+  <!-- Background decoration -->
+  <div style="
+    position: absolute; top: -4rem; right: -4rem;
+    width: 20rem; height: 20rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  "></div>
+  <div style="
+    position: absolute; bottom: -6rem; left: -3rem;
+    width: 24rem; height: 24rem;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  "></div>
+
+  <div style="position: relative; max-width: 640px;">
+    <div style="
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 9999px;
+      padding: 0.375rem 1rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    ">
+      🌍 Built for Africa's Construction Industry
+    </div>
+
+    <h1 style="font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; line-height: 1.15; margin: 0 0 1rem;">
+      Smart Construction Procurement &amp; Milestone Payments
+    </h1>
+    <p style="font-size: 1.0625rem; opacity: 0.85; line-height: 1.65; margin: 0 0 2rem;">
+      Connect customers, contractors, suppliers, and drivers on one platform.
+      Manage materials, projects, deliveries, and escrow releases with full transparency.
+    </p>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 0.875rem;">
+      <a *ngIf="!isAuthed()" routerLink="/register" class="bp-btn bp-btn-lg" style="
+        background: #fff; color: var(--bp-primary); font-weight: 700;
+      ">
+        Get Started Free →
+      </a>
+      <a *ngIf="isAuthed()" routerLink="/projects" class="bp-btn bp-btn-lg" style="
+        background: #fff; color: var(--bp-primary); font-weight: 700;
+      ">
+        My Projects →
+      </a>
+      <a routerLink="/marketplace" class="bp-btn bp-btn-lg" style="
+        background: rgba(255,255,255,0.15);
+        border: 1.5px solid rgba(255,255,255,0.4);
+        color: #fff;
+      ">
+        Browse Marketplace
+      </a>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2);">
+      <div>
+        <div style="font-size: 1.5rem; font-weight: 800;">500+</div>
+        <div style="font-size: 0.8125rem; opacity: 0.75;">Contractors</div>
+      </div>
+      <div>
+        <div style="font-size: 1.5rem; font-weight: 800;">1,200+</div>
+        <div style="font-size: 0.8125rem; opacity: 0.75;">Projects Funded</div>
+      </div>
+      <div>
+        <div style="font-size: 1.5rem; font-weight: 800;">$4.2M+</div>
+        <div style="font-size: 0.8125rem; opacity: 0.75;">Escrow Released</div>
+      </div>
+      <div>
+        <div style="font-size: 1.5rem; font-weight: 800;">12</div>
+        <div style="font-size: 0.8125rem; opacity: 0.75;">Countries</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Feature Cards ─────────────────────────────────────────────────── -->
+<section style="margin-bottom: 2rem;">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin: 0 0 0.5rem;">Everything you need to build</h2>
+    <p style="color: var(--bp-text-muted); font-size: 0.9375rem; margin: 0;">One platform for the entire construction supply chain</p>
+  </div>
+
+  <div class="bp-grid-3">
+    <div class="bp-card bp-fade-in" style="padding: 1.75rem; transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--bp-shadow-lg)'"
+         onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">🏪</div>
+      <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem;">Marketplace</h3>
+      <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0 0 1.25rem; line-height: 1.6;">
+        Browse and order construction materials from verified suppliers. Real-time stock, competitive pricing.
+      </p>
+      <a routerLink="/marketplace" class="bp-btn bp-btn-secondary bp-btn-sm">Browse Products →</a>
+    </div>
+
+    <div class="bp-card bp-fade-in" style="padding: 1.75rem; transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--bp-shadow-lg)'"
+         onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">📋</div>
+      <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem;">Project Management</h3>
+      <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0 0 1.25rem; line-height: 1.6;">
+        Create projects, track milestones, log expenses, and upload progress photos. Full visibility.
+      </p>
+      <a routerLink="/projects" class="bp-btn bp-btn-secondary bp-btn-sm">View Projects →</a>
+    </div>
+
+    <div class="bp-card bp-fade-in" style="padding: 1.75rem; transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--bp-shadow-lg)'"
+         onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">🔒</div>
+      <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem;">Escrow Payments</h3>
+      <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0 0 1.25rem; line-height: 1.6;">
+        Fund escrow wallets and release payments only when milestones are verified. Zero trust required.
+      </p>
+      <a routerLink="/projects" class="bp-btn bp-btn-secondary bp-btn-sm">Manage Escrow →</a>
+    </div>
+
+    <div class="bp-card bp-fade-in" style="padding: 1.75rem; transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--bp-shadow-lg)'"
+         onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">👷</div>
+      <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem;">Contractor Network</h3>
+      <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0 0 1.25rem; line-height: 1.6;">
+        Find verified contractors by specialization, location, and rating. Hire with confidence.
+      </p>
+      <a routerLink="/contractor/verification" class="bp-btn bp-btn-secondary bp-btn-sm">Find Contractors →</a>
+    </div>
+
+    <div class="bp-card bp-fade-in" style="padding: 1.75rem; transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--bp-shadow-lg)'"
+         onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">🚚</div>
+      <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem;">Delivery Tracking</h3>
+      <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0 0 1.25rem; line-height: 1.6;">
+        Real-time delivery status with driver info, ETA, and live map visualization.
+      </p>
+      <a routerLink="/orders" class="bp-btn bp-btn-secondary bp-btn-sm">Track Orders →</a>
+    </div>
+
+    <div class="bp-card bp-fade-in" style="padding: 1.75rem; transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--bp-shadow-lg)'"
+         onmouseleave="this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+      <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem;">Analytics &amp; Reports</h3>
+      <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0 0 1.25rem; line-height: 1.6;">
+        Supplier dashboards, admin analytics, revenue reports, and user growth metrics.
+      </p>
+      <a routerLink="/admin" class="bp-btn bp-btn-secondary bp-btn-sm">View Dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── User Journey ───────────────────────────────────────────────────── -->
+<section class="bp-card" style="padding: 2rem; margin-bottom: 2rem;">
+  <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 1.5rem; text-align: center;">How it works</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+    <div style="text-align: center;">
+      <div style="
+        width: 3rem; height: 3rem; border-radius: 50%;
+        background: var(--bp-primary-light); color: var(--bp-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.125rem;
+        margin: 0 auto 0.875rem;
+      ">1</div>
+      <h4 style="font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.375rem;">Create Account</h4>
+      <p style="font-size: 0.8125rem; color: var(--bp-text-muted); margin: 0;">Register as Customer, Contractor, Supplier, or Driver</p>
+    </div>
+    <div style="text-align: center;">
+      <div style="
+        width: 3rem; height: 3rem; border-radius: 50%;
+        background: var(--bp-primary-light); color: var(--bp-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.125rem;
+        margin: 0 auto 0.875rem;
+      ">2</div>
+      <h4 style="font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.375rem;">Set Up Project</h4>
+      <p style="font-size: 0.8125rem; color: var(--bp-text-muted); margin: 0;">Create a project, define milestones, and fund escrow</p>
+    </div>
+    <div style="text-align: center;">
+      <div style="
+        width: 3rem; height: 3rem; border-radius: 50%;
+        background: var(--bp-primary-light); color: var(--bp-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.125rem;
+        margin: 0 auto 0.875rem;
+      ">3</div>
+      <h4 style="font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.375rem;">Order Materials</h4>
+      <p style="font-size: 0.8125rem; color: var(--bp-text-muted); margin: 0;">Browse marketplace, add to cart, and place orders</p>
+    </div>
+    <div style="text-align: center;">
+      <div style="
+        width: 3rem; height: 3rem; border-radius: 50%;
+        background: var(--bp-primary-light); color: var(--bp-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.125rem;
+        margin: 0 auto 0.875rem;
+      ">4</div>
+      <h4 style="font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.375rem;">Release Payments</h4>
+      <p style="font-size: 0.8125rem; color: var(--bp-text-muted); margin: 0;">Approve milestones and release escrow to contractors</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────────────── -->
+<section *ngIf="!isAuthed()" style="
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+  border-radius: 1.25rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #fff;
+">
+  <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0 0 0.75rem;">Ready to build smarter?</h2>
+  <p style="opacity: 0.85; margin: 0 0 1.75rem; font-size: 1rem;">Join thousands of construction professionals across Africa.</p>
+  <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+    <a routerLink="/register" class="bp-btn bp-btn-lg" style="background: #fff; color: var(--bp-primary); font-weight: 700;">
+      Create Free Account
+    </a>
+    <a routerLink="/about" class="bp-btn bp-btn-lg" style="background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.4); color: #fff;">
+      Learn More
+    </a>
+  </div>
+</section>

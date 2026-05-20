@@ -1,0 +1,125 @@
+<!-- Page Header -->
+<div class="bp-page-header">
+  <h2>📦 My Orders</h2>
+  <p>Track your purchase history and delivery status.</p>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="bp-loading-state">
+  <div class="bp-spinner"></div>
+  Loading orders…
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">⚠️ {{ error }}</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && !error && orders.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">📦</div>
+    <h3>No orders yet</h3>
+    <p>Your order history will appear here once you make a purchase.</p>
+    <a routerLink="/marketplace" class="bp-btn bp-btn-primary" style="margin-top: 1rem;">
+      Browse Marketplace
+    </a>
+  </div>
+</div>
+
+<!-- Orders List -->
+<div *ngIf="!loading && orders.length > 0" style="display: flex; flex-direction: column; gap: 1rem;">
+  <div *ngFor="let o of orders" class="bp-card bp-fade-in" style="overflow: hidden;">
+
+    <!-- Order Header -->
+    <div
+      style="
+        padding: 1.25rem 1.5rem;
+        display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+        cursor: pointer;
+      "
+      (click)="toggleExpand(o.id)"
+    >
+      <!-- Status Icon -->
+      <div style="
+        width: 2.75rem; height: 2.75rem; border-radius: 0.625rem;
+        background: var(--bp-primary-light);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.25rem; flex-shrink: 0;
+      ">{{ statusIcon(o.status) }}</div>
+
+      <!-- Order Info -->
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap;">
+          <span style="font-size: 0.9375rem; font-weight: 600;">Order #{{ o.id | slice:0:8 }}…</span>
+          <span class="bp-badge" [ngClass]="statusClass(o.status)">{{ o.status }}</span>
+        </div>
+        <div style="font-size: 0.8125rem; color: var(--bp-text-muted); margin-top: 0.25rem;">
+          {{ o.createdAt | date:'mediumDate' }} · {{ o.items.length }} item{{ o.items.length !== 1 ? 's' : '' }}
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div style="text-align: right;">
+        <div style="font-size: 1.0625rem; font-weight: 700; color: var(--bp-text);">
+          KES {{ o.totalAmount | number:'1.0-2' }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--bp-text-muted);">
+          {{ expandedId === o.id ? '▲ Hide details' : '▼ View details' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Timeline (always visible) -->
+    <div style="padding: 0 1.5rem 1rem; display: flex; gap: 0; overflow-x: auto;">
+      <div *ngFor="let step of ['Pending', 'Processing', 'Shipped', 'Delivered']; let i = index"
+           style="flex: 1; text-align: center; position: relative; min-width: 80px;">
+        <!-- Connector line -->
+        <div *ngIf="i > 0" style="
+          position: absolute; left: 0; top: 0.875rem;
+          width: 50%; height: 2px;
+          background: var(--bp-border);
+        "></div>
+        <div *ngIf="i < 3" style="
+          position: absolute; right: 0; top: 0.875rem;
+          width: 50%; height: 2px;
+          background: var(--bp-border);
+        "></div>
+        <!-- Dot -->
+        <div style="
+          width: 1.75rem; height: 1.75rem; border-radius: 50%;
+          margin: 0 auto 0.375rem;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 0.75rem; font-weight: 700;
+          position: relative; z-index: 1;
+          border: 2px solid;
+        " [style.background]="['Pending','Processing','Shipped','Delivered'].indexOf(o.status) >= i ? 'var(--bp-primary)' : '#fff'"
+           [style.border-color]="['Pending','Processing','Shipped','Delivered'].indexOf(o.status) >= i ? 'var(--bp-primary)' : 'var(--bp-border)'"
+           [style.color]="['Pending','Processing','Shipped','Delivered'].indexOf(o.status) >= i ? '#fff' : 'var(--bp-text-muted)'">
+          {{ i + 1 }}
+        </div>
+        <div style="font-size: 0.7rem; color: var(--bp-text-muted);">{{ step }}</div>
+      </div>
+    </div>
+
+    <!-- Expanded Items -->
+    <div *ngIf="expandedId === o.id" style="border-top: 1px solid var(--bp-border);" class="bp-fade-in">
+      <table class="bp-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of o.items">
+            <td style="font-weight: 500;">{{ item.productName }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>KES {{ item.unitPrice | number:'1.0-2' }}</td>
+            <td style="font-weight: 600;">KES {{ item.lineTotal | number:'1.0-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

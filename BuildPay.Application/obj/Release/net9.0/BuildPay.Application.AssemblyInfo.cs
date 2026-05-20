@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BuildPay.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ba18bd3d19d8582a8703471cf070532976185dc1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ebeb5386a0a1da33c962a264fa851ec8af5b0616")]
 [assembly: System.Reflection.AssemblyProductAttribute("BuildPay.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BuildPay.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
