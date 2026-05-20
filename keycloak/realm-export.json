@@ -7,13 +7,15 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "verifyEmail": false,
+  "requiredActions": [],
+  "accessTokenLifespan": 1800,
   "roles": {
     "realm": [
-      { "name": "Admin" },
-      { "name": "Customer" },
-      { "name": "Contractor" },
-      { "name": "Supplier" },
-      { "name": "Driver" }
+      { "name": "Admin",      "description": "Platform administrator" },
+      { "name": "Customer",   "description": "Project owner / buyer" },
+      { "name": "Contractor", "description": "Construction contractor" },
+      { "name": "Supplier",   "description": "Materials supplier" },
+      { "name": "Driver",     "description": "Delivery driver" }
     ]
   },
   "clients": [
@@ -44,8 +46,34 @@
       ],
       "webOrigins": [
         "*"
+      ],
+      "protocolMappers": [
+        {
+          "name": "audience-buildpay-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "buildpay-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
       ]
     }
   ]
 }
-
