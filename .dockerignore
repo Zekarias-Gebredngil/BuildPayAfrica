@@ -1,0 +1,30 @@
+# ── .NET build output ─────────────────────────────────────────────────────────
+**/bin/
+**/obj/
+publish-out/
+
+# ── Frontend build output & cache ─────────────────────────────────────────────
+frontend/dist/
+frontend/node_modules/
+frontend/.angular/
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Editor & OS ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+**/.DS_Store
+**/Thumbs.db
+
+# ── Secrets & local config ────────────────────────────────────────────────────
+.env
+.env.*
+**/appsettings.Local.json
+**/appsettings.Production.json
+
+# ── Test results ──────────────────────────────────────────────────────────────
+**/TestResults/
+**/*.trx
+**/coverage/
