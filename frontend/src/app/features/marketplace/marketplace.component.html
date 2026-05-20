@@ -1,0 +1,134 @@
+<!-- Page Header -->
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <div class="bp-page-header" style="margin: 0;">
+    <h2>🏪 Marketplace</h2>
+    <p>Browse and order construction materials from verified suppliers.</p>
+  </div>
+  <a routerLink="/cart" class="bp-btn bp-btn-primary bp-btn-sm">
+    🛒 Cart ({{ cart.items.length }})
+    <span *ngIf="cart.items.length > 0" style="
+      background: rgba(255,255,255,0.25);
+      border-radius: 9999px;
+      padding: 0.1rem 0.5rem;
+      font-size: 0.7rem;
+    ">KES {{ cart.total() | number:'1.0-0' }}</span>
+  </a>
+</div>
+
+<!-- Search & Filters -->
+<div class="bp-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+  <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px; position: relative;">
+      <span style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--bp-text-muted);">🔍</span>
+      <input
+        class="bp-input"
+        style="padding-left: 2.5rem;"
+        placeholder="Search products…"
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+      />
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <span class="bp-badge bp-badge-blue" style="cursor: pointer; padding: 0.375rem 0.875rem;">All</span>
+      <span class="bp-badge bp-badge-gray" style="cursor: pointer; padding: 0.375rem 0.875rem;">Cement</span>
+      <span class="bp-badge bp-badge-gray" style="cursor: pointer; padding: 0.375rem 0.875rem;">Steel</span>
+      <span class="bp-badge bp-badge-gray" style="cursor: pointer; padding: 0.375rem 0.875rem;">Timber</span>
+      <span class="bp-badge bp-badge-gray" style="cursor: pointer; padding: 0.375rem 0.875rem;">Tools</span>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="bp-loading-state">
+  <div class="bp-spinner"></div>
+  Loading products…
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">⚠️ {{ error }}</div>
+
+<!-- Empty Search -->
+<div *ngIf="!loading && !error && filteredProducts.length === 0 && products.length > 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">🔍</div>
+    <h3>No products found</h3>
+    <p>Try a different search term or browse all products.</p>
+  </div>
+</div>
+
+<!-- No Products -->
+<div *ngIf="!loading && !error && products.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">🏪</div>
+    <h3>No products listed yet</h3>
+    <p>Suppliers haven't listed any products yet. Check back soon.</p>
+  </div>
+</div>
+
+<!-- Products Grid -->
+<div *ngIf="!loading && filteredProducts.length > 0"
+     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem;">
+  <div
+    *ngFor="let p of filteredProducts"
+    class="bp-card bp-fade-in"
+    style="overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;"
+    onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--bp-shadow-md)'"
+    onmouseleave="this.style.transform='';this.style.boxShadow=''"
+  >
+    <!-- Product Image Placeholder -->
+    <div style="
+      height: 160px;
+      background: linear-gradient(135deg, #dbeafe, #ede9fe);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    ">
+      🧱
+    </div>
+
+    <div style="padding: 1.25rem;">
+      <!-- Name & Stock -->
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem;">
+        <h3 style="font-size: 0.9375rem; font-weight: 600; margin: 0; line-height: 1.3;">{{ p.name }}</h3>
+        <span class="bp-badge" [ngClass]="p.quantity > 10 ? 'bp-badge-green' : p.quantity > 0 ? 'bp-badge-yellow' : 'bp-badge-red'">
+          {{ p.quantity > 0 ? 'In Stock' : 'Out of Stock' }}
+        </span>
+      </div>
+
+      <!-- Price -->
+      <div style="font-size: 1.25rem; font-weight: 700; color: var(--bp-primary); margin-bottom: 0.375rem;">
+        KES {{ p.price | number:'1.0-2' }}
+      </div>
+      <div style="font-size: 0.75rem; color: var(--bp-text-muted); margin-bottom: 1rem;">
+        {{ p.quantity }} units available
+      </div>
+
+      <!-- Add to Cart -->
+      <button
+        class="bp-btn"
+        style="width: 100%; justify-content: center; transition: all 0.2s;"
+        [ngClass]="isAdded(p.id) ? 'bp-btn-success' : 'bp-btn-primary'"
+        [disabled]="p.quantity <= 0"
+        (click)="addToCart(p)"
+      >
+        {{ isAdded(p.id) ? '✅ Added to Cart' : '🛒 Add to Cart' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Tools (if supplier) -->
+<div *ngIf="auth.isAuthenticated && auth.roles.includes('Supplier')" class="bp-section" style="margin-top: 2rem;">
+  <div class="bp-section-header">
+    <div>
+      <h3>🏭 Supplier Tools</h3>
+      <p>Manage your product listings and inventory.</p>
+    </div>
+  </div>
+  <div class="bp-section-body">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <button class="bp-btn bp-btn-primary bp-btn-sm" disabled>+ Add Product (API)</button>
+      <button class="bp-btn bp-btn-ghost bp-btn-sm" disabled>📊 View Analytics</button>
+      <button class="bp-btn bp-btn-ghost bp-btn-sm" disabled>📦 Manage Inventory</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,98 @@
+<!-- Page Header -->
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <div class="bp-page-header" style="margin: 0;">
+    <h2>
+      🔔 Notifications
+      <span *ngIf="unreadCount > 0" class="bp-badge bp-badge-blue" style="margin-left: 0.5rem; vertical-align: middle;">
+        {{ unreadCount }} new
+      </span>
+    </h2>
+    <p>Stay updated on your projects, orders, and platform activity.</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <button *ngIf="unreadCount > 0" class="bp-btn bp-btn-secondary bp-btn-sm" (click)="markAllRead()">
+      ✅ Mark all read
+    </button>
+    <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="bp-tabs">
+  <button class="bp-tab" [class.active]="filter === 'all'" (click)="filter = 'all'">
+    All ({{ notifications.length }})
+  </button>
+  <button class="bp-tab" [class.active]="filter === 'unread'" (click)="filter = 'unread'">
+    Unread ({{ unreadCount }})
+  </button>
+  <button class="bp-tab" [class.active]="filter === 'read'" (click)="filter = 'read'">
+    Read ({{ notifications.length - unreadCount }})
+  </button>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="bp-loading-state">
+  <div class="bp-spinner"></div>
+  Loading notifications…
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">⚠️ {{ error }}</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && filtered.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">🔔</div>
+    <h3>{{ filter === 'unread' ? 'All caught up!' : 'No notifications' }}</h3>
+    <p>{{ filter === 'unread' ? 'You have no unread notifications.' : 'Notifications will appear here.' }}</p>
+  </div>
+</div>
+
+<!-- Notifications List -->
+<div *ngIf="!loading && filtered.length > 0" style="display: flex; flex-direction: column; gap: 0.75rem;">
+  <div
+    *ngFor="let n of filtered"
+    class="bp-card bp-fade-in"
+    style="padding: 1.25rem 1.5rem; transition: box-shadow 0.15s;"
+    [style.border-left]="!n.isRead ? '3px solid var(--bp-primary)' : ''"
+    onmouseenter="this.style.boxShadow='var(--bp-shadow-md)'"
+    onmouseleave="this.style.boxShadow=''"
+  >
+    <div style="display: flex; align-items: flex-start; gap: 1rem;">
+
+      <!-- Icon -->
+      <div style="
+        width: 2.5rem; height: 2.5rem; border-radius: 0.625rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.125rem; flex-shrink: 0;
+      " [style.background]="!n.isRead ? 'var(--bp-primary-light)' : '#f8fafc'">
+        {{ !n.isRead ? '🔔' : '📭' }}
+      </div>
+
+      <!-- Content -->
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+          <div>
+            <h4 style="font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.25rem;">{{ n.title }}</h4>
+            <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0; line-height: 1.5;">{{ n.message }}</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0;">
+            <span class="bp-badge" [ngClass]="!n.isRead ? 'bp-badge-blue' : 'bp-badge-gray'">
+              {{ !n.isRead ? 'New' : 'Read' }}
+            </span>
+            <button
+              *ngIf="!n.isRead"
+              class="bp-btn bp-btn-ghost bp-btn-sm"
+              (click)="markRead(n.id)"
+            >
+              Mark read
+            </button>
+          </div>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--bp-text-muted); margin-top: 0.5rem;">
+          {{ n.createdAt | date:'medium' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

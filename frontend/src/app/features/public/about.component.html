@@ -1,0 +1,53 @@
+<!-- Hero -->
+<div style="
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+  border-radius: 1.25rem;
+  padding: 3rem 2.5rem;
+  color: #fff;
+  margin-bottom: 2rem;
+  text-align: center;
+">
+  <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 0.75rem;">About BuildPay Africa</h1>
+  <p style="font-size: 1.0625rem; opacity: 0.85; max-width: 600px; margin: 0 auto;">
+    Transforming construction procurement and payments across Africa with trust, transparency, and technology.
+  </p>
+</div>
+
+<!-- Mission -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <div class="bp-card" style="padding: 2rem;">
+    <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+    <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 0.75rem;">Our Mission</h3>
+    <p style="color: var(--bp-text-muted); line-height: 1.7; margin: 0;">
+      To eliminate payment disputes, material fraud, and project delays in Africa's construction industry
+      by providing a secure, transparent platform for all stakeholders.
+    </p>
+  </div>
+  <div class="bp-card" style="padding: 2rem;">
+    <div style="font-size: 2rem; margin-bottom: 1rem;">👁️</div>
+    <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 0.75rem;">Our Vision</h3>
+    <p style="color: var(--bp-text-muted); line-height: 1.7; margin: 0;">
+      A continent where every construction project is completed on time, within budget, and with every
+      stakeholder paid fairly and promptly through smart escrow technology.
+    </p>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="bp-card" style="padding: 2rem; margin-bottom: 2rem;">
+  <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 1.5rem;">What we've built</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+    <div *ngFor="let f of features" style="display: flex; gap: 0.875rem; align-items: flex-start;">
+      <div style="font-size: 1.5rem; flex-shrink: 0;">{{ f.icon }}</div>
+      <div>
+        <div style="font-size: 0.9375rem; font-weight: 600; margin-bottom: 0.25rem;">{{ f.title }}</div>
+        <div style="font-size: 0.8125rem; color: var(--bp-text-muted); line-height: 1.5;">{{ f.desc }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div style="text-align: center;">
+  <a routerLink="/register" class="bp-btn bp-btn-primary bp-btn-lg">Get Started Today →</a>
+</div>

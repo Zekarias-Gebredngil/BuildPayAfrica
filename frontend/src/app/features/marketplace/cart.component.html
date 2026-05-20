@@ -1,0 +1,141 @@
+<!-- Page Header -->
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <div class="bp-page-header" style="margin: 0;">
+    <h2>🛒 Shopping Cart</h2>
+    <p>Review your items and proceed to checkout.</p>
+  </div>
+  <a routerLink="/marketplace" class="bp-btn bp-btn-ghost bp-btn-sm">← Continue Shopping</a>
+</div>
+
+<!-- Empty Cart -->
+<div *ngIf="cart.items.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">🛒</div>
+    <h3>Your cart is empty</h3>
+    <p>Browse the marketplace to find construction materials.</p>
+    <a routerLink="/marketplace" class="bp-btn bp-btn-primary" style="margin-top: 1rem;">
+      Browse Marketplace
+    </a>
+  </div>
+</div>
+
+<!-- Cart Content -->
+<div *ngIf="cart.items.length > 0" style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start;">
+
+  <!-- Items List -->
+  <div class="bp-section">
+    <div class="bp-section-header">
+      <h3>Items ({{ cart.items.length }})</h3>
+      <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="cart.clear()">🗑️ Clear All</button>
+    </div>
+    <div class="bp-section-body" style="padding: 0;">
+      <div *ngFor="let i of cart.items; let last = last" style="
+        padding: 1.25rem 1.5rem;
+        display: flex; align-items: center; gap: 1rem;
+        border-bottom: 1px solid var(--bp-border);
+      " [style.border-bottom]="last ? 'none' : ''">
+
+        <!-- Product Icon -->
+        <div style="
+          width: 3.5rem; height: 3.5rem; border-radius: 0.625rem;
+          background: linear-gradient(135deg, #dbeafe, #ede9fe);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.5rem; flex-shrink: 0;
+        ">🧱</div>
+
+        <!-- Product Info -->
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 0.9375rem; font-weight: 600; margin-bottom: 0.25rem;">{{ i.name }}</div>
+          <div style="font-size: 0.8125rem; color: var(--bp-text-muted);">
+            KES {{ i.unitPrice | number:'1.0-2' }} per unit
+          </div>
+        </div>
+
+        <!-- Quantity -->
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button
+            class="bp-btn bp-btn-ghost bp-btn-sm"
+            style="width: 2rem; height: 2rem; padding: 0; justify-content: center;"
+            (click)="setQty(i.productId, '' + (i.quantity - 1))"
+            [disabled]="i.quantity <= 1"
+          >−</button>
+          <input
+            class="bp-input"
+            style="width: 3.5rem; text-align: center; padding: 0.375rem;"
+            type="number"
+            min="1"
+            [value]="i.quantity"
+            (change)="setQty(i.productId, $any($event.target).value)"
+          />
+          <button
+            class="bp-btn bp-btn-ghost bp-btn-sm"
+            style="width: 2rem; height: 2rem; padding: 0; justify-content: center;"
+            (click)="setQty(i.productId, '' + (i.quantity + 1))"
+          >+</button>
+        </div>
+
+        <!-- Line Total -->
+        <div style="text-align: right; min-width: 100px;">
+          <div style="font-size: 1rem; font-weight: 700;">KES {{ (i.unitPrice * i.quantity) | number:'1.0-2' }}</div>
+        </div>
+
+        <!-- Remove -->
+        <button
+          class="bp-btn bp-btn-ghost bp-btn-sm"
+          style="color: var(--bp-danger); border-color: transparent;"
+          (click)="remove(i.productId)"
+          title="Remove item"
+        >✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Summary -->
+  <div style="position: sticky; top: 5rem;">
+    <div class="bp-section">
+      <div class="bp-section-header">
+        <h3>Order Summary</h3>
+      </div>
+      <div class="bp-section-body" style="display: flex; flex-direction: column; gap: 0.875rem;">
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+          <span style="color: var(--bp-text-muted);">Subtotal ({{ cart.items.length }} items)</span>
+          <span>KES {{ cart.total() | number:'1.0-2' }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+          <span style="color: var(--bp-text-muted);">Delivery fee</span>
+          <span style="color: var(--bp-success);">Free</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+          <span style="color: var(--bp-text-muted);">Tax (16% VAT)</span>
+          <span>KES {{ (cart.total() * 0.16) | number:'1.0-2' }}</span>
+        </div>
+
+        <hr class="bp-divider">
+
+        <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: 700;">
+          <span>Total</span>
+          <span style="color: var(--bp-primary);">KES {{ (cart.total() * 1.16) | number:'1.0-2' }}</span>
+        </div>
+
+        <!-- Error -->
+        <div *ngIf="error" class="bp-alert bp-alert-error">⚠️ {{ error }}</div>
+
+        <!-- Checkout Button -->
+        <button
+          class="bp-btn bp-btn-primary"
+          style="width: 100%; justify-content: center; padding: 0.875rem;"
+          [disabled]="loading"
+          (click)="checkout()"
+        >
+          <span *ngIf="loading" class="bp-spinner" style="width: 1rem; height: 1rem; border-width: 2px; border-top-color: #fff;"></span>
+          {{ loading ? 'Placing Order…' : '✅ Place Order' }}
+        </button>
+
+        <p style="font-size: 0.75rem; color: var(--bp-text-muted); text-align: center; margin: 0;">
+          🔒 Secure checkout powered by BuildPay Escrow
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
