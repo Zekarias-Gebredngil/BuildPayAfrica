@@ -9,6 +9,7 @@ namespace BuildPay.API.Controllers;
 
 [ApiController]
 [Route("api/categories")]
+[Authorize]
 public sealed class CategoriesController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -43,6 +43,12 @@ services:
     command: start-dev --import-realm
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    healthcheck:
+      test: ["CMD-SHELL", "grep -c '1F90' /proc/net/tcp6 > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
     networks:
       - buildpay-network
 
@@ -66,9 +72,13 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - db
-      - redis
-      - keycloak
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    restart: on-failure
     networks:
       - buildpay-network
 

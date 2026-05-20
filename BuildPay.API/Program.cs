@@ -61,8 +61,26 @@ builder.Services
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = !string.IsNullOrWhiteSpace(options.Audience),
+           
+            ValidateAudience = false,
             NameClaimType = "preferred_username"
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = ctx =>
+            {
+                ctx.HandleResponse();
+                ctx.Response.StatusCode = 401;
+                ctx.Response.ContentType = "application/json";
+                return ctx.Response.WriteAsync("{\"message\":\"Authentication required. Please sign in.\"}");
+            },
+            OnForbidden = ctx =>
+            {
+                ctx.Response.StatusCode = 403;
+                ctx.Response.ContentType = "application/json";
+                return ctx.Response.WriteAsync("{\"message\":\"You do not have permission to access this resource.\"}");
+            }
         };
     });
 

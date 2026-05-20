@@ -37,6 +37,7 @@ public sealed class DeliveriesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin,Supplier,Driver,Customer")]
     public async Task<ActionResult<DeliveryDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetDeliveryByIdQuery(id), cancellationToken);

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ShellComponent } from './layout/shell.component';
 import { HomeComponent } from './features/public/home.component';
 import { AboutComponent } from './features/public/about.component';
+import { ForbiddenComponent } from './features/public/forbidden.component';
 import { MarketplaceComponent } from './features/marketplace/marketplace.component';
 import { CartComponent } from './features/marketplace/cart.component';
 import { LoginComponent } from './features/auth/login.component';
@@ -14,22 +15,33 @@ import { AdminComponent } from './features/admin/admin.component';
 import { ContractorVerificationComponent } from './features/contractor/contractor-verification.component';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
+import { guestGuard } from './core/auth/guest.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: ShellComponent,
     children: [
-      { path: '', pathMatch: 'full', component: HomeComponent },
-      { path: 'about', component: AboutComponent },
+      // ── Public ──────────────────────────────────────────────────────
+      { path: '',      pathMatch: 'full', component: HomeComponent },
+      { path: 'about',     component: AboutComponent },
+      { path: 'forbidden', component: ForbiddenComponent },
+
+      // ── Auth (redirect to home if already logged in) ─────────────────
+      { path: 'login',    component: LoginComponent,    canActivate: [guestGuard] },
+      { path: 'register', component: RegisterComponent, canActivate: [guestGuard] },
+
+      // ── Marketplace (browse public, cart requires auth) ──────────────
       { path: 'marketplace', component: MarketplaceComponent },
-      { path: 'login', component: LoginComponent },
-      { path: 'register', component: RegisterComponent },
-      { path: 'cart', component: CartComponent, canActivate: [authGuard] },
-      { path: 'projects', component: ProjectsComponent, canActivate: [authGuard] },
+      { path: 'cart',        component: CartComponent, canActivate: [authGuard] },
+
+      // ── Authenticated ────────────────────────────────────────────────
+      { path: 'projects',     component: ProjectsComponent,      canActivate: [authGuard] },
       { path: 'projects/:id', component: ProjectDetailComponent, canActivate: [authGuard] },
-      { path: 'orders', component: OrdersComponent, canActivate: [authGuard] },
-      { path: 'notifications', component: NotificationsComponent, canActivate: [authGuard] },
+      { path: 'orders',       component: OrdersComponent,        canActivate: [authGuard] },
+      { path: 'notifications',component: NotificationsComponent, canActivate: [authGuard] },
+
+      // ── Role-restricted ──────────────────────────────────────────────
       {
         path: 'admin',
         component: AdminComponent,

@@ -11,6 +11,7 @@ namespace BuildPay.API.Controllers;
 
 [ApiController]
 [Route("api/contractors")]
+[Authorize]
 public sealed class ContractorsController : ControllerBase
 {
     private readonly IMediator _mediator;
