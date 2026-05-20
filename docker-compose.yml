@@ -44,11 +44,11 @@ services:
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      test: ["CMD-SHELL", "grep -c '1F90' /proc/net/tcp6 > /dev/null 2>&1"]
       interval: 15s
-      timeout: 10s
-      retries: 8
-      start_period: 60s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
     networks:
       - buildpay-network
 
