@@ -1,0 +1,31 @@
+<div class="bp-page-header"><h2>📈 Revenue & Analytics</h2><p>Sales performance and order analytics.</p></div>
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+<div *ngIf="!loading()" class="bp-fade-in">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="bp-stat-card" style="background:linear-gradient(135deg,#065f46,#059669);color:#fff;border:none;">
+      <div class="stat-label" style="color:rgba(255,255,255,0.75);">Total Revenue</div>
+      <div class="stat-value" style="color:#fff;">KES {{ totalRevenue() | number:'1.0-0' }}</div>
+    </div>
+    <div class="bp-stat-card">
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-value">{{ orders().length }}</div>
+    </div>
+    <div class="bp-stat-card">
+      <div class="stat-label">Products Listed</div>
+      <div class="stat-value">{{ products().length }}</div>
+    </div>
+  </div>
+
+  <div class="bp-section">
+    <div class="bp-section-header"><h3>Orders by Status</h3></div>
+    <div class="bp-section-body">
+      <div *ngIf="ordersByStatus().length === 0" class="bp-empty-state" style="padding:2rem;">
+        <div class="bp-empty-icon">📊</div><h3>No orders yet</h3>
+      </div>
+      <div *ngFor="let s of ordersByStatus()" style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--bp-border);">
+        <span style="font-size:0.875rem;font-weight:500;">{{ s.status }}</span>
+        <span class="bp-badge bp-badge-blue">{{ s.count }}</span>
+      </div>
+    </div>
+  </div>
+</div>
