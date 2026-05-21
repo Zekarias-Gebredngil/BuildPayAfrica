@@ -6,7 +6,8 @@ import { MilestoneTrackerComponent } from './milestone-tracker.component';
 import { EscrowWalletComponent } from './escrow-wallet.component';
 import { ContractorSearchComponent } from './contractor-search.component';
 import { DeliveryTrackingComponent } from './delivery-tracking.component';
-import { ProjectsComponent } from '../projects/projects.component';
+import { CustomerProjectsComponent } from './projects/projects-list.component';
+import { CustomerProjectDetailComponent } from './projects/project-detail.component';
 import { OrdersComponent } from '../orders/orders.component';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { CartComponent } from '../marketplace/cart.component';
@@ -18,17 +19,22 @@ export const CUSTOMER_ROUTES: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Customer', 'Admin'] },
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      { path: 'dashboard', component: CustomerDashboardComponent },
-      { path: 'projects', component: ProjectsComponent },
-      { path: 'milestones', component: MilestoneTrackerComponent },
-      { path: 'wallet', component: EscrowWalletComponent },
-      { path: 'orders', component: OrdersComponent },
-      { path: 'contractors', component: ContractorSearchComponent },
-      { path: 'deliveries', component: DeliveryTrackingComponent },
-      { path: 'notifications', component: NotificationsComponent },
-      { path: 'marketplace', component: MarketplaceComponent },
-      { path: 'cart', component: CartComponent }
+      { path: '',           pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'dashboard',  component: CustomerDashboardComponent },
+
+      // ── Projects (full CRUD) ──────────────────────────────────────────
+      { path: 'projects',        component: CustomerProjectsComponent },
+      { path: 'projects/:id',    component: CustomerProjectDetailComponent },
+
+      // ── Other customer features ───────────────────────────────────────
+      { path: 'milestones',   component: MilestoneTrackerComponent },
+      { path: 'wallet',       component: EscrowWalletComponent },
+      { path: 'orders',       component: OrdersComponent },
+      { path: 'contractors',  component: ContractorSearchComponent },
+      { path: 'deliveries',   component: DeliveryTrackingComponent },
+      { path: 'notifications',component: NotificationsComponent },
+      { path: 'marketplace',  component: MarketplaceComponent },
+      { path: 'cart',         component: CartComponent }
     ]
   }
 ];
