@@ -1,0 +1,41 @@
+<div class="bp-page-header"><h2>⭐ Profile & Ratings</h2><p>Manage your public contractor profile.</p></div>
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+
+<div *ngIf="!loading()" class="bp-fade-in" style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start;">
+
+  <!-- Edit form -->
+  <div class="bp-section">
+    <div class="bp-section-header"><h3>Edit Profile</h3></div>
+    <div class="bp-section-body">
+      <form [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:1.25rem;">
+        <div class="bp-form-group">
+          <label class="bp-label">Display Name *</label>
+          <input class="bp-input" formControlName="displayName" placeholder="Your professional name" />
+        </div>
+        <div class="bp-form-group">
+          <label class="bp-label">Bio</label>
+          <textarea class="bp-input" formControlName="bio" rows="4"
+                    placeholder="Describe your experience, specialisations, and past projects…"
+                    style="resize:vertical;"></textarea>
+        </div>
+        <div *ngIf="error()" class="bp-alert bp-alert-error">⚠️ {{ error() }}</div>
+        <div *ngIf="success()" class="bp-alert bp-alert-success">✅ Profile saved.</div>
+        <button type="submit" class="bp-btn bp-btn-primary" style="align-self:flex-start;"
+                [disabled]="form.invalid || saving()">
+          <span *ngIf="saving()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          {{ saving() ? 'Saving…' : 'Save Profile' }}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Rating summary -->
+  <div class="bp-card" style="padding:1.5rem;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:0.5rem;">{{ profile()?.displayName ? profile()!.displayName[0].toUpperCase() : '?' }}</div>
+    <div style="font-size:1rem;font-weight:600;margin-bottom:0.25rem;">{{ profile()?.displayName || 'No name set' }}</div>
+    <div style="font-size:1.25rem;color:#f59e0b;margin-bottom:0.25rem;">{{ stars(profile()?.ratingAverage ?? 0) }}</div>
+    <div style="font-size:0.8125rem;color:var(--bp-text-muted);">
+      {{ profile()?.ratingAverage | number:'1.1-1' }} / 5 · {{ profile()?.ratingCount }} review{{ profile()?.ratingCount !== 1 ? 's' : '' }}
+    </div>
+  </div>
+</div>

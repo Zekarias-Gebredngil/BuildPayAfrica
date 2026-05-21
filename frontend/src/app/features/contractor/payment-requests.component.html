@@ -1,0 +1,35 @@
+<div class="bp-page-header"><h2>💳 Payment Requests</h2><p>Request escrow release for completed milestones.</p></div>
+
+<div *ngIf="success()" class="bp-alert bp-alert-success" style="margin-bottom:1.5rem;">
+  ✅ Release request submitted. The customer will be notified to approve payment.
+</div>
+
+<div class="bp-section">
+  <div class="bp-section-header">
+    <div><h3>Request Milestone Release</h3><p>Enter the milestone and project IDs to request payment.</p></div>
+  </div>
+  <div class="bp-section-body">
+    <form [formGroup]="form" (ngSubmit)="submit()" style="display:flex;flex-direction:column;gap:1.25rem;max-width:520px;">
+      <div class="bp-form-group">
+        <label class="bp-label">Milestone ID (UUID) *</label>
+        <input class="bp-input" formControlName="milestoneId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        <span *ngIf="form.get('milestoneId')?.invalid && form.get('milestoneId')?.touched"
+              style="font-size:0.75rem;color:var(--bp-danger);">Enter a valid milestone UUID.</span>
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Project ID (UUID) *</label>
+        <input class="bp-input" formControlName="projectId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Amount (KES) *</label>
+        <input class="bp-input" type="number" min="1" formControlName="amount" />
+      </div>
+      <div *ngIf="error()" class="bp-alert bp-alert-error">⚠️ {{ error() }}</div>
+      <button type="submit" class="bp-btn bp-btn-primary" style="align-self:flex-start;"
+              [disabled]="form.invalid || submitting()">
+        <span *ngIf="submitting()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+        {{ submitting() ? 'Requesting…' : '📤 Request Release' }}
+      </button>
+    </form>
+  </div>
+</div>
