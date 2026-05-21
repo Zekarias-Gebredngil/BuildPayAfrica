@@ -1,61 +1,57 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { RouterLink } from '@angular/router';
 
-type Overview = {
-  users: number;
-  contractorsPending: number;
-  products: number;
-  orders: number;
-  projects: number;
-  deliveries: number;
-};
-
-type PendingContractor = {
-  id: string;
-  userId: string;
-  licenceNumber: string;
-  status: string;
-  documentUrls: string[];
-};
+interface Overview { users: number; contractorsPending: number; products: number; orders: number; projects: number; deliveries: number; }
+interface PendingVerification { id: string; userId: string; licenceNumber: string; status: string; documentUrls: string[]; }
+interface Transaction { id: string; projectId: string; milestoneId?: string; amount: number; direction: string; createdAtUtc: string; }
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './admin.component.html'
 })
 export class AdminComponent {
   private readonly http = inject(HttpClient);
 
-  overview: Overview | null = null;
-  pending: PendingContractor[] = [];
-  error: string | null = null;
-  loading = true;
-
-  activeTab: 'overview' | 'verifications' | 'users' | 'transactions' = 'overview';
+  overview      = signal<Overview | null>(null);
+  verifications = signal<PendingVerification[]>([]);
+  transactions  = signal<Transaction[]>([]);
+  loading       = signal(true);
+  error         = signal<string | null>(null);
+  activeTab     = signal<'overview' | 'verifications' | 'transactions' | 'escrow'>('overview');
+  processingId  = signal<string | null>(null);
 
   constructor() { this.load(); }
 
   load() {
-    this.loading = true;
-    this.error = null;
-
-    this.http.get<Overview>(`/api/admin/overview`).subscribe({
-      next:  (o) => { this.overview = o; this.loading = false; },
-      error: ()  => { this.error = 'Failed to load overview'; this.loading = false; }
-    });
-
-    this.http.get<PendingContractor[]>(`/api/contractors/verifications/pending`).subscribe({
-      next:  (p) => (this.pending = p),
-      error: ()  => (this.error = 'Failed to load pending contractors')
+    this.loading.set(true);
+    this.error.set(null);
+    forkJoin({
+      overview: this.http.get<Overview>('/api/admin/overview').pipe(catchError(() => of(null))),
+      verifications: this.http.get<PendingVerification[]>('/api/contractors/verifications/pending').pipe(catchError(() => of([]))),
+      transactions: this.http.get<Transaction[]>('/api/payments/admin/transactions').pipe(catchError(() => of([])))
+    }).subscribe(({ overview, verifications, transactions }) => {
+      this.overview.set(overview);
+      this.verifications.set(verifications as PendingVerification[]);
+      this.transactions.set(transactions as Transaction[]);
+      this.loading.set(false);
     });
   }
 
-  setStatus(verificationId: string, status: 'Approved' | 'Rejected') {
-    this.http.put(`/api/contractors/verifications/${verificationId}/status`, { status, rejectionReason: status === 'Rejected' ? 'Rejected by admin' : null }).subscribe({
-      next:  () => this.load(),
-      error: ()  => (this.error = 'Failed to update contractor status')
+  setVerificationStatus(id: string, status: 'Approved' | 'Rejected', reason?: string) {
+    this.processingId.set(id);
+    this.http.put(`/api/contractors/verifications/${id}/status`, { status, rejectionReason: reason ?? '' }).subscribe({
+      next:  () => { this.processingId.set(null); this.load(); },
+      error: (e) => { this.processingId.set(null); this.error.set(e?.error?.message ?? 'Update failed'); }
     });
+  }
+
+  get totalRevenue() {
+    return this.transactions().filter(t => t.direction === 'Credit').reduce((s, t) => s + t.amount, 0);
   }
 }
