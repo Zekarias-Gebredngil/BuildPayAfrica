@@ -3,14 +3,16 @@ import { Component, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 
 export type ProjectDto = {
   id: string;
-  customerId: string;
-  contractorId?: string | null;
+  customerUserId?: string;
+  contractorUserId?: string | null;
   name: string;
   budget: number;
   status: string;
+  createdAt?: string;
 };
 
 @Component({
@@ -22,6 +24,7 @@ export type ProjectDto = {
 export class ProjectsComponent {
   private readonly http = inject(HttpClient);
   private readonly fb   = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
 
   projects: ProjectDto[] = [];
   loading  = true;
@@ -38,16 +41,28 @@ export class ProjectsComponent {
 
   constructor() { this.load(); }
 
+  get isCustomer() { return this.auth.roles.includes('Customer'); }
+  get isContractor() { return this.auth.roles.includes('Contractor'); }
+  get isAdmin() { return this.auth.roles.includes('Admin'); }
+
   load() {
     this.loading = true;
     this.error = null;
-    this.http.get<ProjectDto[]>(`/api/projects/my`).subscribe({
+
+    const roles = this.auth.roles;
+    const url =
+      roles.includes('Admin') ? `/api/projects/all` :
+      roles.includes('Contractor') ? `/api/projects/assigned` :
+      `/api/projects/my`;
+
+    this.http.get<ProjectDto[]>(url).subscribe({
       next:  (res) => { this.projects = res; this.loading = false; },
       error: ()    => { this.loading = false; this.error = 'Failed to load projects'; }
     });
   }
 
   create() {
+    if (!this.isCustomer) return;
     if (this.form.invalid) return;
     const { name, budget } = this.form.getRawValue();
     this.creating = true;
