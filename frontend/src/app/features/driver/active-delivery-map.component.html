@@ -1,0 +1,29 @@
+<div class="bp-page-header"><h2>🗺️ Active Delivery Map</h2><p>View delivery details and send GPS updates.</p></div>
+<div class="bp-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+  <div style="display:flex;gap:0.75rem;max-width:480px;">
+    <input class="bp-input" placeholder="Enter Delivery ID…"
+           [ngModel]="deliveryId()" (ngModelChange)="deliveryId.set($event)" (keyup.enter)="load()" />
+    <button class="bp-btn bp-btn-primary" (click)="load()" [disabled]="!deliveryId().trim() || loading()">
+      <span *ngIf="loading()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+      Load
+    </button>
+  </div>
+</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+<div *ngIf="delivery()" class="bp-card bp-fade-in" style="padding:1.5rem;">
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+    <span class="bp-badge bp-badge-blue">{{ delivery().status }}</span>
+    <span style="font-size:0.8125rem;color:var(--bp-text-muted);">Order: {{ delivery().orderId | slice:0:8 }}…</span>
+  </div>
+  <div style="height:240px;background:linear-gradient(135deg,#dbeafe,#ede9fe);border-radius:0.75rem;
+              display:flex;align-items:center;justify-content:center;border:1px solid var(--bp-border);">
+    <div style="text-align:center;color:var(--bp-text-muted);">
+      <div style="font-size:3rem;margin-bottom:0.5rem;">🗺️</div>
+      <div style="font-size:0.875rem;font-weight:500;">Live GPS Map</div>
+      <div style="font-size:0.75rem;">Use Status Updates to push your coordinates</div>
+    </div>
+  </div>
+  <div style="margin-top:1rem;font-size:0.8125rem;color:var(--bp-text-muted);">
+    Last updated: {{ delivery().updatedAtUtc | date:'medium' }}
+  </div>
+</div>

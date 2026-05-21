@@ -1,78 +1,63 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
-type UploadResponse = { url: string };
+interface VerificationStatus {
+  id: string; status: string; licenceNumber: string;
+  documentUrls: string[]; rejectionReason?: string;
+}
 
 @Component({
   selector: 'app-contractor-verification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './contractor-verification.component.html'
 })
 export class ContractorVerificationComponent {
   private readonly http = inject(HttpClient);
   private readonly fb   = inject(FormBuilder);
 
-  loading = false;
-  success = false;
-  error: string | null = null;
-
-  licenseFileName  = '';
-  idFileName       = '';
-  uploadingLicense = false;
-  uploadingId      = false;
+  existing  = signal<VerificationStatus | null>(null);
+  loading   = signal(true);
+  submitting = signal(false);
+  success   = signal(false);
+  error     = signal<string | null>(null);
 
   form = this.fb.group({
-    licenseNumber: ['', [Validators.required]],
-    licenseUrl:    ['', [Validators.required]],
-    idUrl:         ['', [Validators.required]]
+    licenceNumber: ['', [Validators.required, Validators.maxLength(50)]],
+    doc1: ['', [Validators.required]],
+    doc2: ['']
   });
 
-  upload(event: Event, control: 'licenseUrl' | 'idUrl') {
-    const input = event.target as HTMLInputElement;
-    const file  = input.files?.[0];
-    if (!file) return;
+  constructor() { this.loadStatus(); }
 
-    if (control === 'licenseUrl') { this.uploadingLicense = true; this.licenseFileName = file.name; }
-    else                          { this.uploadingId      = true; this.idFileName      = file.name; }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    this.http.post<UploadResponse>(`/api/files`, formData).subscribe({
-      next: (res) => {
-        if (control === 'licenseUrl') this.uploadingLicense = false;
-        else                          this.uploadingId      = false;
-        this.form.patchValue({ [control]: res.url });
-      },
-      error: () => {
-        if (control === 'licenseUrl') this.uploadingLicense = false;
-        else                          this.uploadingId      = false;
-        this.error = 'Upload failed. Please try again.';
-      }
+  loadStatus() {
+    this.loading.set(true);
+    this.http.get<VerificationStatus>('/api/contractors/verifications/me').subscribe({
+      next:  (v) => { this.existing.set(v); this.loading.set(false); },
+      error: (e) => { this.loading.set(false); if (e.status !== 404) this.error.set('Failed to load status'); }
     });
   }
 
   submit() {
     if (this.form.invalid) return;
     const v = this.form.getRawValue();
+    const documentUrls = [v.doc1!, ...(v.doc2 ? [v.doc2] : [])];
 
-    this.loading = true;
-    this.success = false;
-    this.error   = null;
+    this.submitting.set(true);
+    this.error.set(null);
 
-    this.http.post(`/api/contractors/verification`, {
-      licenseNumber: v.licenseNumber,
-      documents: [
-        { documentType: 'License', fileUrl: v.licenseUrl },
-        { documentType: 'Id',      fileUrl: v.idUrl }
-      ]
+    this.http.post('/api/contractors/verifications', {
+      licenceNumber: v.licenceNumber,
+      documentUrls
     }).subscribe({
-      next:  () => { this.loading = false; this.success = true; },
-      error: (e) => { this.loading = false; this.error = e?.error?.message ?? 'Submission failed'; }
+      next: () => { this.submitting.set(false); this.success.set(true); this.loadStatus(); },
+      error: (e) => { this.submitting.set(false); this.error.set(e?.error?.message ?? 'Submission failed'); }
     });
+  }
+
+  statusBadge(s: string) {
+    return s === 'Approved' ? 'bp-badge-green' : s === 'Rejected' ? 'bp-badge-red' : 'bp-badge-yellow';
   }
 }

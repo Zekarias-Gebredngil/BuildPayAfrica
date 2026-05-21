@@ -1,499 +1,263 @@
-<!-- ═══════════════════════════════════════════════════════════════════════
-     AUTHENTICATED LAYOUT  — sidebar + header bar
-     ═══════════════════════════════════════════════════════════════════════ -->
-<ng-container *ngIf="isAuthed(); else publicLayout">
+<!-- ── Top header (always visible) ──────────────────────────────────── -->
+<header class="app-header-bar" [class.authenticated]="isAuthed()">
+  <div class="app-header-inner">
 
-  <div class="app-frame">
+    <!-- Logo -->
+    <a routerLink="/" class="app-logo" (click)="closeMobile()">
+      <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-header" />
+    </a>
 
-    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
-    <aside class="sidebar" [class.sidebar-open]="mobileOpen()">
+    <!-- Public nav (unauthenticated only) -->
+    <nav *ngIf="!isAuthed()" class="public-nav desktop-nav">
+      <a routerLink="/"            routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}" class="nav-link">Home</a>
+      <a routerLink="/marketplace" routerLinkActive="nav-active" class="nav-link">Marketplace</a>
+      <a routerLink="/about"       routerLinkActive="nav-active" class="nav-link">About</a>
+    </nav>
 
-      <!-- Logo -->
-      <a routerLink="/" class="sidebar-logo" (click)="closeMobile()">
-        <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-sidebar" />
+    <div style="flex:1;"></div>
+
+    <!-- Authenticated header actions -->
+    <div *ngIf="isAuthed()" class="header-actions">
+      <a [routerLink]="'/features/' + primaryRole().toLowerCase() + '/notifications'"
+         class="header-icon-btn" title="Notifications">🔔</a>
+      <div class="header-user">
+        <div class="header-avatar">{{ initials }}</div>
+        <span class="header-username">{{ userName() }}</span>
+      </div>
+      <button (click)="logout()" class="bp-btn bp-btn-ghost bp-btn-sm">Sign out</button>
+    </div>
+
+    <!-- Unauthenticated header actions -->
+    <div *ngIf="!isAuthed()" class="public-header-actions">
+      <a routerLink="/login"    class="bp-btn bp-btn-primary  bp-btn-sm">Sign in</a>
+      <a routerLink="/register" class="bp-btn bp-btn-secondary bp-btn-sm">Register</a>
+    </div>
+
+    <!-- Mobile hamburger (always) -->
+    <button (click)="toggleMobile()" class="mobile-menu-btn" aria-label="Toggle menu">
+      <span *ngIf="!mobileOpen()">☰</span>
+      <span *ngIf="mobileOpen()">✕</span>
+    </button>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div *ngIf="mobileOpen()" class="mobile-drawer">
+    <ng-container *ngIf="!isAuthed()">
+      <a routerLink="/"            (click)="closeMobile()" class="mobile-nav-link">🏠 Home</a>
+      <a routerLink="/marketplace" (click)="closeMobile()" class="mobile-nav-link">🏪 Marketplace</a>
+      <a routerLink="/about"       (click)="closeMobile()" class="mobile-nav-link">ℹ️ About</a>
+      <hr class="bp-divider">
+      <a routerLink="/login"    (click)="closeMobile()" class="bp-btn bp-btn-primary"  style="margin-bottom:0.5rem;">Sign in</a>
+      <a routerLink="/register" (click)="closeMobile()" class="bp-btn bp-btn-secondary">Register</a>
+    </ng-container>
+    <ng-container *ngIf="isAuthed()">
+      <a *ngFor="let item of navItems()"
+         [routerLink]="item.path" (click)="closeMobile()" class="mobile-nav-link">
+        {{ item.icon }} {{ item.label }}
       </a>
+      <hr class="bp-divider">
+      <button (click)="logout()" class="bp-btn bp-btn-ghost" style="justify-content:flex-start;">🚪 Sign out</button>
+    </ng-container>
+  </div>
+</header>
 
-      <!-- Role badge -->
-      <div class="sidebar-role-badge" *ngIf="primaryRole()">
-        {{ primaryRole() }}
-      </div>
+<!-- ── Main layout ────────────────────────────────────────────────────── -->
+<div class="layout-body" [class.with-sidebar]="isAuthed()">
 
-      <!-- Nav items -->
-      <nav class="sidebar-nav">
-        <a *ngFor="let item of navItems()"
-           [routerLink]="item.path"
-           routerLinkActive="sidebar-link-active"
-           [routerLinkActiveOptions]="{exact: item.path.endsWith('dashboard')}"
-           (click)="closeMobile()"
-           class="sidebar-link">
-          <span class="sidebar-link-icon">{{ item.icon }}</span>
-          <span class="sidebar-link-label">{{ item.label }}</span>
-        </a>
-      </nav>
+  <!-- Sidebar (authenticated only) -->
+  <aside *ngIf="isAuthed()" class="sidebar" [class.sidebar-open]="mobileOpen()">
+    <a routerLink="/" class="sidebar-logo" (click)="closeMobile()">
+      <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-sidebar" />
+    </a>
+    <div class="sidebar-role-badge" *ngIf="primaryRole()">{{ primaryRole() }}</div>
+    <nav class="sidebar-nav">
+      <a *ngFor="let item of navItems()"
+         [routerLink]="item.path"
+         routerLinkActive="sidebar-link-active"
+         [routerLinkActiveOptions]="{exact: item.path.endsWith('dashboard')}"
+         (click)="closeMobile()"
+         class="sidebar-link">
+        <span class="sidebar-link-icon">{{ item.icon }}</span>
+        <span class="sidebar-link-label">{{ item.label }}</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button (click)="logout()" class="sidebar-signout"><span>🚪</span> Sign out</button>
+    </div>
+  </aside>
 
-      <!-- Bottom: sign out -->
-      <div class="sidebar-footer">
-        <button (click)="logout()" class="sidebar-signout">
-          <span>🚪</span> Sign out
-        </button>
-      </div>
-    </aside>
+  <!-- Overlay -->
+  <div *ngIf="isAuthed() && mobileOpen()" class="sidebar-overlay" (click)="closeMobile()"></div>
 
-    <!-- Overlay for mobile -->
-    <div class="sidebar-overlay" *ngIf="mobileOpen()" (click)="closeMobile()"></div>
+  <!-- Single router-outlet — always present, never destroyed -->
+  <main class="app-main" [class.public-main]="!isAuthed()">
+    <router-outlet />
+  </main>
+</div>
 
-    <!-- ── Right panel ───────────────────────────────────────────────────── -->
-    <div class="app-body">
-
-      <!-- Top header bar -->
-      <header class="app-header">
-
-        <!-- Mobile hamburger -->
-        <button class="hamburger" (click)="toggleMobile()" aria-label="Toggle menu">
-          <span *ngIf="!mobileOpen()">☰</span>
-          <span *ngIf="mobileOpen()">✕</span>
-        </button>
-
-        <!-- Page title spacer -->
-        <div style="flex:1;"></div>
-
-        <!-- Header actions -->
-        <div class="header-actions">
-
-          <!-- Notifications -->
-          <a routerLink="/features/{{ primaryRole().toLowerCase() }}/notifications"
-             class="header-icon-btn" title="Notifications">
-            🔔
-          </a>
-
-          <!-- User avatar + name -->
-          <div class="header-user">
-            <div class="header-avatar">{{ initials }}</div>
-            <span class="header-username">{{ userName() }}</span>
-          </div>
-
-          <!-- Sign out -->
-          <button (click)="logout()" class="bp-btn bp-btn-ghost bp-btn-sm header-signout">
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      <!-- Page content -->
-      <main class="app-main">
-        <router-outlet />
-      </main>
-
-      <!-- Footer -->
-      <footer class="app-footer">
-        <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-footer" />
-        <span>© 2025 BuildPay Africa — Smart Construction Procurement &amp; Payments</span>
-      </footer>
+<!-- ── Footer ─────────────────────────────────────────────────────────── -->
+<footer class="app-footer">
+  <div class="app-footer-inner">
+    <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-footer" />
+    <span>© 2025 BuildPay Africa — Smart Construction Procurement &amp; Payments</span>
+    <div *ngIf="!isAuthed()" style="display:flex;gap:1.5rem;">
+      <a routerLink="/about"       style="color:var(--bp-text-muted);text-decoration:none;">About</a>
+      <a routerLink="/marketplace" style="color:var(--bp-text-muted);text-decoration:none;">Marketplace</a>
     </div>
   </div>
-
-</ng-container>
-
-<!-- ═══════════════════════════════════════════════════════════════════════
-     PUBLIC LAYOUT  — top nav only (unauthenticated)
-     ═══════════════════════════════════════════════════════════════════════ -->
-<ng-template #publicLayout>
-  <div style="min-height:100vh; display:flex; flex-direction:column; background:var(--bp-bg);">
-
-    <!-- Public header -->
-    <header class="public-header">
-      <div class="public-header-inner">
-
-        <!-- Logo -->
-        <a routerLink="/" class="public-logo">
-          <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-header" />
-        </a>
-
-        <!-- Desktop nav -->
-        <nav class="public-nav desktop-nav">
-          <a routerLink="/"           routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}" class="nav-link">Home</a>
-          <a routerLink="/marketplace" routerLinkActive="nav-active" class="nav-link">Marketplace</a>
-          <a routerLink="/about"       routerLinkActive="nav-active" class="nav-link">About</a>
-        </nav>
-
-        <!-- Auth buttons -->
-        <div class="public-header-actions">
-          <a routerLink="/login"    class="bp-btn bp-btn-primary  bp-btn-sm">Sign in</a>
-          <a routerLink="/register" class="bp-btn bp-btn-secondary bp-btn-sm">Register</a>
-          <button (click)="toggleMobile()" class="mobile-menu-btn" aria-label="Toggle menu">
-            <span *ngIf="!mobileOpen()">☰</span>
-            <span *ngIf="mobileOpen()">✕</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Mobile drawer -->
-      <div *ngIf="mobileOpen()" class="mobile-drawer">
-        <a routerLink="/"            (click)="closeMobile()" class="mobile-nav-link">🏠 Home</a>
-        <a routerLink="/marketplace" (click)="closeMobile()" class="mobile-nav-link">🏪 Marketplace</a>
-        <a routerLink="/about"       (click)="closeMobile()" class="mobile-nav-link">ℹ️ About</a>
-        <hr class="bp-divider">
-        <a routerLink="/login"    (click)="closeMobile()" class="bp-btn bp-btn-primary"  style="margin-bottom:0.5rem;">Sign in</a>
-        <a routerLink="/register" (click)="closeMobile()" class="bp-btn bp-btn-secondary">Register</a>
-      </div>
-    </header>
-
-    <!-- Page content -->
-    <main style="flex:1; max-width:1280px; width:100%; margin:0 auto; padding:2rem 1.5rem;">
-      <router-outlet />
-    </main>
-
-    <!-- Public footer -->
-    <footer class="public-footer">
-      <div class="public-footer-inner">
-        <img src="images/BPA logo1.png" alt="BuildPay Africa" class="logo-img-footer" />
-        <span>© 2025 BuildPay Africa — Smart Construction Procurement &amp; Payments</span>
-        <div style="display:flex; gap:1.5rem;">
-          <a routerLink="/about"       style="color:var(--bp-text-muted); text-decoration:none;">About</a>
-          <a routerLink="/marketplace" style="color:var(--bp-text-muted); text-decoration:none;">Marketplace</a>
-        </div>
-      </div>
-    </footer>
-  </div>
-</ng-template>
+</footer>
 
 
-<!-- ═══════════════════════════════════════════════════════════════════════
-     SCOPED STYLES
-     ═══════════════════════════════════════════════════════════════════════ -->
 <style>
-/* ── Layout frame ─────────────────────────────────────────────────────── */
-.app-frame {
-  display: flex;
-  min-height: 100vh;
-  background: var(--bp-bg);
-}
-
-/* ── Sidebar ──────────────────────────────────────────────────────────── */
-.sidebar {
-  width: 240px;
-  flex-shrink: 0;
-  background: lightgray;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 40;
-  overflow-y: auto;
-  transition: transform 0.25s ease;
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem 1rem 0.75rem;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-.logo-img-sidebar {
-  width: 160px;
-  height: auto;
-  object-fit: contain;
-  filter: brightness(1.1);
-}
-
-.sidebar-role-badge {
-  margin: 0.75rem 1rem 0.25rem;
-  padding: 0.25rem 0.75rem;
-  background: rgba(255,255,255,0.1);
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 0.75rem 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: 0.5rem;
-  text-decoration: none;
-  color: rgba(255,255,255,0.7);
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background 0.15s, color 0.15s;
-}
-.sidebar-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.sidebar-link-active { background: rgba(255,255,255,0.15) !important; color: #fff !important; }
-.sidebar-link-icon { font-size: 1rem; width: 1.25rem; text-align: center; flex-shrink: 0; }
-.sidebar-link-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.sidebar-footer {
-  padding: 1rem 0.75rem;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
-
-.sidebar-signout {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  border-radius: 0.5rem;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.65);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.sidebar-signout:hover { background: rgba(239,68,68,0.2); color: #fca5a5; border-color: rgba(239,68,68,0.4); }
-
-.sidebar-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 39;
-}
-
-/* ── App body (right of sidebar) ─────────────────────────────────────── */
-.app-body {
-  flex: 1;
-  margin-left: 240px;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* ── Top header bar ──────────────────────────────────────────────────── */
-.app-header {
-  position: sticky; top: 0; z-index: 30;
-  height: 3.75rem;
-  background: rgba(255,255,255,0.97);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--bp-border);
-  box-shadow: 0 1px 3px rgb(0 0 0 / .05);
-  display: flex;
-  align-items: center;
-  padding: 0 1.5rem;
-  gap: 1rem;
-}
-
-.hamburger {
-  display: none;
-  width: 2.25rem; height: 2.25rem;
-  border: 1px solid var(--bp-border);
-  border-radius: 0.5rem;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.125rem;
-  align-items: center; justify-content: center;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.header-icon-btn {
-  width: 2.25rem; height: 2.25rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--bp-border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1rem;
-  text-decoration: none;
-  color: var(--bp-text-muted);
-  transition: background 0.15s, border-color 0.15s;
-}
-.header-icon-btn:hover { background: var(--bp-primary-light); border-color: var(--bp-primary); }
-
-.header-user {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.header-avatar {
-  width: 2rem; height: 2rem;
-  border-radius: 50%;
-  background: var(--bp-primary-light);
-  color: var(--bp-primary);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.header-username {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--bp-text);
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.header-signout { flex-shrink: 0; }
-
-/* ── Main content ────────────────────────────────────────────────────── */
-.app-main {
-  flex: 1;
-  padding: 2rem 1.5rem;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-/* ── App footer ──────────────────────────────────────────────────────── */
-.app-footer {
-  border-top: 1px solid var(--bp-border);
-  background: #fff;
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.8125rem;
-  color: var(--bp-text-muted);
-}
-
-/* ── Public header ───────────────────────────────────────────────────── */
-.public-header {
+/* ── Header ──────────────────────────────────────────────────────────── */
+.app-header-bar {
   position: sticky; top: 0; z-index: 50;
   background: rgba(255,255,255,0.97);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--bp-border);
   box-shadow: 0 1px 3px rgb(0 0 0 / .06);
 }
+.app-header-inner {
+  max-width: 1280px; margin: 0 auto;
+  padding: 0 1.5rem; height: 4rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.app-logo { display:flex; align-items:center; text-decoration:none; flex-shrink:0; }
+.logo-img-header { height:48px; width:auto; object-fit:contain; }
 
-.public-header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 4.5rem;
+/* ── Layout body ─────────────────────────────────────────────────────── */
+.layout-body {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  min-height: calc(100vh - 4rem - 60px);
+  background: var(--bp-bg);
+}
+.layout-body.with-sidebar { /* sidebar takes 240px */ }
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: #0f2044;
+  display: flex; flex-direction: column;
+  position: fixed; top: 4rem; left: 0; bottom: 0;
+  z-index: 40; overflow-y: auto;
+  transition: transform 0.25s ease;
+}
+.sidebar-logo {
+  display:flex; align-items:center; justify-content:center;
+  padding:1.25rem 1rem 0.75rem; text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.logo-img-sidebar { width:160px; height:auto; object-fit:contain; filter:brightness(1.1); }
+.sidebar-role-badge {
+  margin:0.75rem 1rem 0.25rem; padding:0.25rem 0.75rem;
+  background:rgba(255,255,255,0.1); border-radius:9999px;
+  font-size:0.7rem; font-weight:700; color:rgba(255,255,255,0.7);
+  text-transform:uppercase; letter-spacing:0.08em; text-align:center;
+}
+.sidebar-nav { flex:1; padding:0.75rem; display:flex; flex-direction:column; gap:0.125rem; }
+.sidebar-link {
+  display:flex; align-items:center; gap:0.75rem;
+  padding:0.625rem 0.875rem; border-radius:0.5rem;
+  text-decoration:none; color:rgba(255,255,255,0.7);
+  font-size:0.875rem; font-weight:500;
+  transition:background 0.15s, color 0.15s;
+}
+.sidebar-link:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.sidebar-link-active { background:rgba(255,255,255,0.15) !important; color:#fff !important; }
+.sidebar-link-icon { font-size:1rem; width:1.25rem; text-align:center; flex-shrink:0; }
+.sidebar-link-label { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sidebar-footer { padding:1rem 0.75rem; border-top:1px solid rgba(255,255,255,0.08); }
+.sidebar-signout {
+  display:flex; align-items:center; gap:0.625rem; width:100%;
+  padding:0.625rem 0.875rem; border-radius:0.5rem;
+  background:transparent; border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.65); font-size:0.875rem; cursor:pointer;
+  transition:background 0.15s, color 0.15s;
+}
+.sidebar-signout:hover { background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.4); }
+.sidebar-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:39;
 }
 
-.public-logo {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  flex-shrink: 0;
+/* ── Main content ────────────────────────────────────────────────────── */
+.app-main {
+  flex:1; margin-left:240px;
+  padding:2rem 1.5rem;
+  min-height:calc(100vh - 4rem - 60px);
+  box-sizing:border-box;
+}
+.app-main.public-main {
+  margin-left:0;
+  max-width:1280px; width:100%; margin:0 auto;
 }
 
-.logo-img-header {
-  height: 52px;
-  width: auto;
-  object-fit: contain;
+/* ── Header actions ──────────────────────────────────────────────────── */
+.header-actions { display:flex; align-items:center; gap:0.75rem; }
+.header-icon-btn {
+  width:2.25rem; height:2.25rem; border-radius:0.5rem;
+  border:1px solid var(--bp-border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1rem; text-decoration:none; color:var(--bp-text-muted);
+  transition:background 0.15s, border-color 0.15s;
 }
-
-.public-nav { display: flex; align-items: center; gap: 0.25rem; }
-
-.public-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-shrink: 0;
+.header-icon-btn:hover { background:var(--bp-primary-light); border-color:var(--bp-primary); }
+.header-user { display:flex; align-items:center; gap:0.5rem; }
+.header-avatar {
+  width:2rem; height:2rem; border-radius:50%;
+  background:var(--bp-primary-light); color:var(--bp-primary);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.75rem; font-weight:700; flex-shrink:0;
 }
-
-/* ── Public footer ───────────────────────────────────────────────────── */
-.public-footer {
-  border-top: 1px solid var(--bp-border);
-  background: #fff;
-  padding: 1.5rem;
+.header-username {
+  font-size:0.875rem; font-weight:500; color:var(--bp-text);
+  max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
+.public-header-actions { display:flex; align-items:center; gap:0.625rem; flex-shrink:0; }
 
-.public-footer-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.8125rem;
-  color: var(--bp-text-muted);
+/* ── Footer ──────────────────────────────────────────────────────────── */
+.app-footer { border-top:1px solid var(--bp-border); background:#fff; padding:1.25rem 1.5rem; }
+.app-footer-inner {
+  max-width:1280px; margin:0 auto;
+  display:flex; flex-wrap:wrap; align-items:center; gap:1rem;
+  font-size:0.8125rem; color:var(--bp-text-muted);
 }
-
-.logo-img-footer {
-  height: 36px;
-  width: auto;
-  object-fit: contain;
-  opacity: 0.85;
-}
+.logo-img-footer { height:36px; width:auto; object-fit:contain; opacity:0.85; }
 
 /* ── Mobile drawer ───────────────────────────────────────────────────── */
 .mobile-drawer {
-  border-top: 1px solid var(--bp-border);
-  background: #fff;
-  padding: 1rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  border-top:1px solid var(--bp-border); background:#fff;
+  padding:1rem 1.5rem; display:flex; flex-direction:column; gap:0.25rem;
 }
 
-/* ── Shared nav styles ───────────────────────────────────────────────── */
+/* ── Shared nav ──────────────────────────────────────────────────────── */
+.public-nav { display:flex; align-items:center; gap:0.25rem; }
 .nav-link {
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--bp-text-muted);
-  text-decoration: none;
-  transition: color 0.15s, background 0.15s;
+  padding:0.375rem 0.75rem; border-radius:0.375rem;
+  font-size:0.875rem; font-weight:500; color:var(--bp-text-muted);
+  text-decoration:none; transition:color 0.15s, background 0.15s;
 }
-.nav-link:hover { color: var(--bp-primary); background: var(--bp-primary-light); }
-.nav-active { color: var(--bp-primary) !important; background: var(--bp-primary-light); }
-
+.nav-link:hover { color:var(--bp-primary); background:var(--bp-primary-light); }
+.nav-active { color:var(--bp-primary) !important; background:var(--bp-primary-light); }
 .mobile-nav-link {
-  padding: 0.75rem 0.5rem;
-  border-radius: 0.5rem;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--bp-text);
-  text-decoration: none;
-  display: block;
-  transition: background 0.15s;
+  padding:0.75rem 0.5rem; border-radius:0.5rem;
+  font-size:0.9375rem; font-weight:500; color:var(--bp-text);
+  text-decoration:none; display:block; transition:background 0.15s;
 }
-.mobile-nav-link:hover { background: #f8fafc; }
-
+.mobile-nav-link:hover { background:#f8fafc; }
 .mobile-menu-btn {
-  display: none;
-  width: 2.25rem; height: 2.25rem;
-  border: 1px solid var(--bp-border);
-  border-radius: 0.5rem;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.125rem;
-  align-items: center; justify-content: center;
+  display:none; width:2.25rem; height:2.25rem;
+  border:1px solid var(--bp-border); border-radius:0.5rem;
+  background:transparent; cursor:pointer; font-size:1.125rem;
+  align-items:center; justify-content:center;
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-  .sidebar.sidebar-open {
-    transform: translateX(0);
-  }
-  .sidebar-overlay { display: block; }
-  .app-body { margin-left: 0; }
-  .hamburger { display: flex !important; }
-  .header-username { display: none; }
-  .desktop-nav { display: none !important; }
-  .mobile-menu-btn { display: flex !important; }
+  .sidebar { transform:translateX(-100%); top:4rem; }
+  .sidebar.sidebar-open { transform:translateX(0); }
+  .app-main { margin-left:0 !important; }
+  .mobile-menu-btn { display:flex !important; }
+  .header-username { display:none; }
+  .desktop-nav { display:none !important; }
 }
 </style>

@@ -1,0 +1,32 @@
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+<div *ngIf="!loading()" class="bp-fade-in">
+  <div style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.5rem;font-weight:700;margin:0 0 0.25rem;">Welcome back{{ displayName() ? ', ' + displayName() : '' }} 🏭</h2>
+    <p style="color:var(--bp-text-muted);margin:0;">Your supplier workspace.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="bp-stat-card">
+      <div class="stat-label">Products Listed</div>
+      <div class="stat-value">{{ products().length }}</div>
+    </div>
+    <div class="bp-stat-card">
+      <div class="stat-label">Low Stock</div>
+      <div class="stat-value" [style.color]="lowStock > 0 ? 'var(--bp-danger)' : 'inherit'">{{ lowStock }}</div>
+      <div class="stat-sub">Below 10 units</div>
+    </div>
+    <div class="bp-stat-card">
+      <div class="stat-label">Pending Orders</div>
+      <div class="stat-value" [style.color]="pendingOrders > 0 ? 'var(--bp-warning)' : 'inherit'">{{ pendingOrders }}</div>
+    </div>
+  </div>
+  <div class="bp-card" style="padding:1.5rem;">
+    <h3 style="font-size:1rem;font-weight:600;margin:0 0 1rem;">Quick Actions</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+      <a routerLink="/features/supplier/products"   class="bp-btn bp-btn-primary bp-btn-sm">+ Add Product</a>
+      <a routerLink="/features/supplier/inventory"  class="bp-btn bp-btn-secondary bp-btn-sm">📦 Inventory</a>
+      <a routerLink="/features/supplier/orders"     class="bp-btn bp-btn-ghost bp-btn-sm">🛒 Orders</a>
+      <a routerLink="/features/supplier/deliveries" class="bp-btn bp-btn-ghost bp-btn-sm">🚚 Deliveries</a>
+      <a routerLink="/features/supplier/revenue"    class="bp-btn bp-btn-ghost bp-btn-sm">📈 Revenue</a>
+    </div>
+  </div>
+</div>

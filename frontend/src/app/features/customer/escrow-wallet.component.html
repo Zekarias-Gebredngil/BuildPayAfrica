@@ -1,0 +1,71 @@
+<div class="bp-page-header"><h2>🔒 Escrow Wallet</h2><p>Fund project escrow accounts and monitor balances.</p></div>
+
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<div *ngIf="!loading()" class="bp-fade-in">
+
+  <!-- Total balance card -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="bp-stat-card" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;border:none;">
+      <div class="stat-label" style="color:rgba(255,255,255,0.75);">Total Escrow Balance</div>
+      <div class="stat-value" style="color:#fff;">KES {{ totalEscrow | number:'1.0-0' }}</div>
+      <div class="stat-sub" style="color:rgba(255,255,255,0.65);">Across {{ balances().length }} projects</div>
+    </div>
+    <div class="bp-stat-card">
+      <div class="stat-label">Active Projects</div>
+      <div class="stat-value">{{ projects().length }}</div>
+      <div class="stat-sub">Total projects</div>
+    </div>
+  </div>
+
+  <!-- Per-project balances -->
+  <div class="bp-section" style="margin-bottom:1.5rem;">
+    <div class="bp-section-header"><h3>Project Balances</h3></div>
+    <div *ngIf="balances().length === 0" class="bp-empty-state" style="padding:2rem;">
+      <div class="bp-empty-icon">🔒</div>
+      <h3>No active projects</h3>
+      <p>Create a project to start funding escrow.</p>
+      <a routerLink="/features/customer/projects" class="bp-btn bp-btn-primary bp-btn-sm" style="margin-top:0.75rem;">Create Project</a>
+    </div>
+    <div style="overflow-x:auto;" *ngIf="balances().length > 0">
+      <table class="bp-table">
+        <thead><tr><th>Project</th><th>Escrow Balance</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let b of balances()">
+            <td style="font-weight:500;">{{ b.name }}</td>
+            <td style="font-weight:700;color:var(--bp-success);">KES {{ b.balance | number:'1.0-0' }}</td>
+            <td><span class="bp-badge" [ngClass]="b.balance > 0 ? 'bp-badge-green' : 'bp-badge-gray'">{{ b.balance > 0 ? 'Funded' : 'Empty' }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Fund escrow form -->
+  <div class="bp-section">
+    <div class="bp-section-header"><div><h3>Fund Escrow</h3><p>Add funds to a project's escrow account.</p></div></div>
+    <div class="bp-section-body">
+      <form [formGroup]="fundForm" (ngSubmit)="fund()"
+            style="display:grid;grid-template-columns:1fr 200px auto;gap:1rem;align-items:end;">
+        <div class="bp-form-group">
+          <label class="bp-label">Select Project *</label>
+          <select class="bp-input" formControlName="projectId">
+            <option value="">— Choose project —</option>
+            <option *ngFor="let p of projects()" [value]="p.id">{{ p.name }} ({{ p.status }})</option>
+          </select>
+        </div>
+        <div class="bp-form-group">
+          <label class="bp-label">Amount (KES) *</label>
+          <input class="bp-input" type="number" min="1" formControlName="amount" placeholder="e.g. 50000" />
+        </div>
+        <button class="bp-btn bp-btn-primary" [disabled]="fundForm.invalid || funding()" style="height:2.625rem;">
+          <span *ngIf="funding()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          {{ funding() ? 'Funding…' : '🔒 Fund' }}
+        </button>
+      </form>
+      <div *ngIf="fundError()" class="bp-alert bp-alert-error" style="margin-top:1rem;">⚠️ {{ fundError() }}</div>
+      <div *ngIf="fundSuccess()" class="bp-alert bp-alert-success" style="margin-top:1rem;">✅ {{ fundSuccess() }}</div>
+    </div>
+  </div>
+</div>

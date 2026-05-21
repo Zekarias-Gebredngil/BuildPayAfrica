@@ -39,6 +39,16 @@ export class AuthService {
   get displayName(): string   { return this.displayName$(); }
   get isAuthenticated(): boolean { return this.isAuthenticated$(); }
 
+  get roleHomePath(): string {
+    const roles = this.roles;
+    if (roles.includes('Admin')) return '/features/admin';
+    if (roles.includes('Customer')) return '/features/customer/dashboard';
+    if (roles.includes('Contractor')) return '/features/contractor/dashboard';
+    if (roles.includes('Supplier')) return '/features/supplier/dashboard';
+    if (roles.includes('Driver')) return '/features/driver/dashboard';
+    return '/';
+  }
+
   private refreshInFlight$: Observable<boolean> | null = null;
 
   constructor(
@@ -67,6 +77,13 @@ export class AuthService {
     localStorage.removeItem(this.refreshKey);
     this._state.set({ token: null, refreshToken: null, payload: null, roles: [] });
     this.router.navigateByUrl('/login');
+  }
+
+  /** Clears tokens without forcing a navigation (useful for guards). */
+  clearSession() {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.refreshKey);
+    this._state.set({ token: null, refreshToken: null, payload: null, roles: [] });
   }
 
   handleUnauthorized() {

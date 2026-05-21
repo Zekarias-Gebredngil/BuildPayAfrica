@@ -1,0 +1,31 @@
+<div class="bp-page-header"><h2>📡 GPS Status Updates</h2><p>Send your current location to update delivery tracking.</p></div>
+<div *ngIf="success()" class="bp-alert bp-alert-success" style="margin-bottom:1.5rem;">✅ Location sent successfully.</div>
+<div class="bp-section">
+  <div class="bp-section-header"><h3>Send Location Update</h3></div>
+  <div class="bp-section-body">
+    <form [formGroup]="form" (ngSubmit)="send()" style="display:flex;flex-direction:column;gap:1.25rem;max-width:480px;">
+      <div class="bp-form-group">
+        <label class="bp-label">Delivery ID *</label>
+        <input class="bp-input" formControlName="deliveryId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="bp-form-group">
+          <label class="bp-label">Latitude *</label>
+          <input class="bp-input" type="number" step="0.000001" formControlName="latitude" />
+        </div>
+        <div class="bp-form-group">
+          <label class="bp-label">Longitude *</label>
+          <input class="bp-input" type="number" step="0.000001" formControlName="longitude" />
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="bp-btn bp-btn-ghost bp-btn-sm" (click)="useCurrentLocation()">📍 Use My Location</button>
+        <div *ngIf="error()" class="bp-alert bp-alert-error" style="margin:0;">⚠️ {{ error() }}</div>
+      </div>
+      <button type="submit" class="bp-btn bp-btn-primary" style="align-self:flex-start;" [disabled]="form.invalid || sending()">
+        <span *ngIf="sending()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+        {{ sending() ? 'Sending…' : '📡 Send Update' }}
+      </button>
+    </form>
+  </div>
+</div>

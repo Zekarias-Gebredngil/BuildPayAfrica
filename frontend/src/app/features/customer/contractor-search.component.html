@@ -1,0 +1,49 @@
+<div class="bp-page-header"><h2>👷 Contractor Search</h2><p>Find verified contractors for your projects.</p></div>
+
+<div class="bp-card" style="padding:1.25rem;margin-bottom:1.5rem;">
+  <div style="position:relative;">
+    <span style="position:absolute;left:0.875rem;top:50%;transform:translateY(-50%);color:var(--bp-text-muted);">🔍</span>
+    <input class="bp-input" style="padding-left:2.5rem;" placeholder="Search by name…"
+           [ngModel]="search()" (ngModelChange)="search.set($event)" />
+  </div>
+</div>
+
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading contractors…</div>
+<div *ngIf="error()" class="bp-alert bp-alert-info" style="margin-bottom:1rem;">
+  ℹ️ Contractor profiles are loaded from the User Profile service. Ensure it is running.
+</div>
+
+<div *ngIf="!loading() && filtered.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">👷</div>
+    <h3>No contractors found</h3>
+    <p>Verified contractors will appear here once they complete verification.</p>
+  </div>
+</div>
+
+<div *ngIf="!loading() && filtered.length > 0"
+     style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
+  <div *ngFor="let c of filtered" class="bp-card bp-fade-in"
+       style="padding:1.5rem;transition:transform 0.15s,box-shadow 0.15s;"
+       onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--bp-shadow-md)'"
+       onmouseleave="this.style.transform='';this.style.boxShadow=''">
+    <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:1rem;">
+      <div class="bp-avatar" style="width:3rem;height:3rem;font-size:1.125rem;background:var(--bp-primary-light);color:var(--bp-primary);">
+        {{ c.displayName ? c.displayName[0].toUpperCase() : '?' }}
+      </div>
+      <div>
+        <div style="font-size:0.9375rem;font-weight:600;">{{ c.displayName || 'Unnamed Contractor' }}</div>
+        <div style="font-size:0.75rem;color:#f59e0b;">{{ stars(c.ratingAverage) }} ({{ c.ratingCount }})</div>
+      </div>
+    </div>
+    <p *ngIf="c.bio" style="font-size:0.8125rem;color:var(--bp-text-muted);margin:0 0 1rem;line-height:1.5;">{{ c.bio }}</p>
+    <div style="font-size:0.75rem;color:var(--bp-text-muted);font-family:monospace;word-break:break-all;">
+      ID: {{ c.userId }}
+    </div>
+    <button class="bp-btn bp-btn-secondary bp-btn-sm" style="margin-top:0.875rem;width:100%;justify-content:center;"
+            (click)="$any($event.target).closest('.bp-card').querySelector('.copy-id').select()">
+      📋 Copy ID to assign
+    </button>
+    <input class="copy-id" [value]="c.userId" style="position:absolute;opacity:0;pointer-events:none;" readonly />
+  </div>
+</div>

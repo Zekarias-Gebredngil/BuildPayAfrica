@@ -36,9 +36,13 @@ export class LoginComponent {
     this.auth.login(email!, password!).subscribe({
       next: () => {
         this.loading = false;
-        // Redirect to the originally requested URL, or home
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
-        this.router.navigateByUrl(returnUrl);
+        // Redirect to the originally requested URL, or role home
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        if (returnUrl && returnUrl !== '/' && returnUrl !== '/login') {
+          this.router.navigateByUrl(returnUrl);
+        } else {
+          this.router.navigateByUrl(this.auth.roleHomePath);
+        }
       },
       error: (e) => {
         this.loading = false;

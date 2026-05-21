@@ -9,8 +9,14 @@ export const ADMIN_ROUTES: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Admin'] },
     children: [
-      { path: '', component: AdminComponent }
+      { path: '',        component: AdminComponent },
+      { path: 'users',          component: AdminComponent },
+      { path: 'verifications',  component: AdminComponent },
+      { path: 'products',       component: AdminComponent },
+      { path: 'transactions',   component: AdminComponent },
+      { path: 'escrow',         component: AdminComponent },
+      { path: 'deliveries',     component: AdminComponent },
+      { path: 'settings',       component: AdminComponent }
     ]
   }
 ];
-
