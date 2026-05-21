@@ -30,7 +30,7 @@ public sealed class CreateOrderCommandTests
 
         var handler = new CreateOrderCommandHandler(db);
         var orderId = await handler.Handle(
-            new CreateOrderCommand(customerId, new List<CreateOrderCommand.CreateOrderItem> { new(productId, 2) }),
+            new CreateOrderCommand(customerId, new List<CreateOrderItem> { new(productId, 2) }),
             CancellationToken.None);
 
         var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == orderId);
@@ -66,7 +66,7 @@ public sealed class CreateOrderCommandTests
 
         await Assert.ThrowsAsync<ValidationException>(async () =>
             await handler.Handle(
-                new CreateOrderCommand(customerId, new List<CreateOrderCommand.CreateOrderItem> { new(productId, 2) }),
+                new CreateOrderCommand(customerId, new List<CreateOrderItem> { new(productId, 2) }),
                 CancellationToken.None));
     }
 }
