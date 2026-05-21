@@ -1,0 +1,73 @@
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  <div class="bp-page-header" style="margin:0;"><h2>📦 Inventory Management</h2><p>Manage your product listings and stock levels.</p></div>
+  <button class="bp-btn bp-btn-primary" (click)="showForm.set(!showForm())">{{ showForm() ? '✕ Cancel' : '+ Add Product' }}</button>
+</div>
+
+<div *ngIf="showForm()" class="bp-section bp-fade-in" style="margin-bottom:1.5rem;">
+  <div class="bp-section-header"><h3>New Product</h3></div>
+  <div class="bp-section-body">
+    <form [formGroup]="form" (ngSubmit)="create()"
+          style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:end;">
+      <div class="bp-form-group" style="grid-column:1/-1">
+        <label class="bp-label">Product Name *</label>
+        <input class="bp-input" formControlName="name" placeholder="e.g. Portland Cement 50kg" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Price (KES) *</label>
+        <input class="bp-input" type="number" min="0.01" step="0.01" formControlName="price" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Quantity *</label>
+        <input class="bp-input" type="number" min="0" formControlName="quantity" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Category *</label>
+        <select class="bp-input" formControlName="categoryId">
+          <option value="">— Select —</option>
+          <option *ngFor="let c of categories()" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+      <div class="bp-form-group" style="grid-column:1/-1">
+        <label class="bp-label">Image URL (optional)</label>
+        <input class="bp-input" formControlName="imageUrl" placeholder="https://…" />
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:0.75rem;align-items:center;">
+        <button class="bp-btn bp-btn-primary" [disabled]="form.invalid || creating()">
+          <span *ngIf="creating()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          {{ creating() ? 'Adding…' : 'Add Product' }}
+        </button>
+        <div *ngIf="createError()" class="bp-alert bp-alert-error" style="margin:0;">⚠️ {{ createError() }}</div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<div *ngIf="!loading() && products().length === 0" class="bp-card">
+  <div class="bp-empty-state"><div class="bp-empty-icon">📦</div><h3>No products yet</h3><p>Add your first product to start selling.</p></div>
+</div>
+
+<div *ngIf="!loading() && products().length > 0" class="bp-section">
+  <div class="bp-section-header">
+    <h3>Products ({{ products().length }})</h3>
+    <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="bp-table">
+      <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let p of products()">
+          <td>
+            <div style="font-weight:500;">{{ p.name }}</div>
+            <div style="font-size:0.75rem;color:var(--bp-text-muted);font-family:monospace;">{{ p.id | slice:0:8 }}…</div>
+          </td>
+          <td style="font-weight:600;">KES {{ p.price | number:'1.0-2' }}</td>
+          <td>{{ p.quantity }} units</td>
+          <td><span class="bp-badge" [ngClass]="stockBadge(p.quantity)">{{ stockLabel(p.quantity) }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

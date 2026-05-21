@@ -1,0 +1,120 @@
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading dashboard…</div>
+
+<div *ngIf="!loading()" class="bp-fade-in">
+
+  <!-- Welcome -->
+  <div style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.5rem;font-weight:700;margin:0 0 0.25rem;">
+      Welcome back{{ displayName() ? ', ' + displayName() : '' }} 👋
+    </h2>
+    <p style="color:var(--bp-text-muted);margin:0;">Here's what's happening with your projects today.</p>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div class="stat-label">Total Projects</div>
+          <div class="stat-value">{{ projects().length }}</div>
+          <div class="stat-sub">{{ activeProjects }} active</div>
+        </div>
+        <div class="stat-icon" style="background:#dbeafe;color:#1d4ed8;">🏗️</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div class="stat-label">Draft Projects</div>
+          <div class="stat-value">{{ draftProjects }}</div>
+          <div class="stat-sub">Awaiting contractor</div>
+        </div>
+        <div class="stat-icon" style="background:#fef3c7;color:#92400e;">📝</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div class="stat-label">Unread Alerts</div>
+          <div class="stat-value" [style.color]="unreadCount > 0 ? 'var(--bp-primary)' : 'inherit'">{{ unreadCount }}</div>
+          <div class="stat-sub">Notifications</div>
+        </div>
+        <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;">🔔</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div class="stat-label">Recent Orders</div>
+          <div class="stat-value">{{ recentOrders().length }}</div>
+          <div class="stat-sub">Last 3 orders</div>
+        </div>
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46;">📦</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+    <!-- Recent Projects -->
+    <div class="bp-section">
+      <div class="bp-section-header">
+        <div><h3>Recent Projects</h3></div>
+        <a routerLink="/features/customer/projects" class="bp-btn bp-btn-ghost bp-btn-sm">View all →</a>
+      </div>
+      <div class="bp-section-body" style="padding:0;">
+        <div *ngIf="projects().length === 0" class="bp-empty-state" style="padding:2rem;">
+          <div class="bp-empty-icon">🏗️</div>
+          <h3>No projects yet</h3>
+          <a routerLink="/features/customer/projects" class="bp-btn bp-btn-primary bp-btn-sm" style="margin-top:0.75rem;">Create Project</a>
+        </div>
+        <div *ngFor="let p of projects().slice(0,4); let last = last"
+             style="padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;"
+             [style.border-bottom]="!last ? '1px solid var(--bp-border)' : ''">
+          <div>
+            <div style="font-size:0.875rem;font-weight:600;">{{ p.name }}</div>
+            <div style="font-size:0.75rem;color:var(--bp-text-muted);">KES {{ p.budget | number:'1.0-0' }}</div>
+          </div>
+          <span class="bp-badge" [ngClass]="p.status === 'Active' ? 'bp-badge-blue' : p.status === 'Completed' ? 'bp-badge-green' : 'bp-badge-gray'">{{ p.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unread Notifications -->
+    <div class="bp-section">
+      <div class="bp-section-header">
+        <div><h3>Recent Alerts</h3></div>
+        <a routerLink="/features/customer/notifications" class="bp-btn bp-btn-ghost bp-btn-sm">View all →</a>
+      </div>
+      <div class="bp-section-body" style="padding:0;">
+        <div *ngIf="notifications().length === 0" class="bp-empty-state" style="padding:2rem;">
+          <div class="bp-empty-icon">🔔</div>
+          <h3>All caught up!</h3>
+          <p>No unread notifications.</p>
+        </div>
+        <div *ngFor="let n of notifications(); let last = last"
+             style="padding:1rem 1.5rem;display:flex;align-items:flex-start;gap:0.75rem;"
+             [style.border-bottom]="!last ? '1px solid var(--bp-border)' : ''">
+          <div style="width:2rem;height:2rem;border-radius:0.5rem;background:var(--bp-primary-light);display:flex;align-items:center;justify-content:center;font-size:0.875rem;flex-shrink:0;">🔔</div>
+          <div>
+            <div style="font-size:0.8125rem;line-height:1.4;">{{ n.content }}</div>
+            <div style="font-size:0.7rem;color:var(--bp-text-muted);margin-top:0.25rem;">{{ n.createdAtUtc | date:'shortDate' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bp-card" style="padding:1.5rem;margin-top:1.5rem;">
+    <h3 style="font-size:1rem;font-weight:600;margin:0 0 1rem;">Quick Actions</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+      <a routerLink="/features/customer/projects" class="bp-btn bp-btn-primary bp-btn-sm">🏗️ New Project</a>
+      <a routerLink="/features/customer/marketplace" class="bp-btn bp-btn-secondary bp-btn-sm">🏪 Browse Materials</a>
+      <a routerLink="/features/customer/wallet" class="bp-btn bp-btn-ghost bp-btn-sm">🔒 Escrow Wallet</a>
+      <a routerLink="/features/customer/contractors" class="bp-btn bp-btn-ghost bp-btn-sm">👷 Find Contractors</a>
+      <a routerLink="/features/customer/orders" class="bp-btn bp-btn-ghost bp-btn-sm">📦 My Orders</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  <div class="bp-page-header" style="margin:0;"><h2>🎯 Milestone Tracker</h2><p>Track all milestones across your projects.</p></div>
+  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+</div>
+
+<div class="bp-tabs">
+  <button class="bp-tab" [class.active]="filter()==='all'"       (click)="filter.set('all')">All ({{ milestones().length }})</button>
+  <button class="bp-tab" [class.active]="filter()==='Pending'"   (click)="filter.set('Pending')">Pending</button>
+  <button class="bp-tab" [class.active]="filter()==='Completed'" (click)="filter.set('Completed')">Completed</button>
+  <button class="bp-tab" [class.active]="filter()==='Approved'"  (click)="filter.set('Approved')">Approved</button>
+</div>
+
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading milestones…</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<div *ngIf="!loading() && filtered.length === 0" class="bp-card">
+  <div class="bp-empty-state">
+    <div class="bp-empty-icon">🎯</div>
+    <h3>No milestones found</h3>
+    <p>Milestones appear once you have active projects with milestones added.</p>
+    <a routerLink="/features/customer/projects" class="bp-btn bp-btn-primary bp-btn-sm" style="margin-top:0.75rem;">Go to Projects</a>
+  </div>
+</div>
+
+<div *ngIf="!loading() && filtered.length > 0" style="display:flex;flex-direction:column;gap:0.875rem;">
+  <div *ngFor="let m of filtered" class="bp-card bp-fade-in" style="padding:1.25rem 1.5rem;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <div style="display:flex;align-items:center;gap:0.625rem;margin-bottom:0.375rem;">
+          <h4 style="font-size:0.9375rem;font-weight:600;margin:0;">{{ m.title }}</h4>
+          <span class="bp-badge" [ngClass]="statusBadge(m.status)">{{ m.status }}</span>
+          <span *ngIf="isOverdue(m.dueDate, m.status)" class="bp-badge bp-badge-red">Overdue</span>
+        </div>
+        <div style="font-size:0.8125rem;color:var(--bp-text-muted);">
+          Project: <strong>{{ m.projectName }}</strong> · Due: {{ m.dueDate | date:'mediumDate' }}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:1rem;font-weight:700;">KES {{ m.amount | number:'1.0-0' }}</div>
+        <a [routerLink]="['/features/customer/projects', m.projectId]"
+           style="font-size:0.75rem;color:var(--bp-primary);text-decoration:none;">View project →</a>
+      </div>
+    </div>
+  </div>
+</div>

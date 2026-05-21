@@ -1,0 +1,390 @@
+<!-- Loading -->
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading project…</div>
+
+<!-- Error -->
+<div *ngIf="error() && !loading()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<div *ngIf="!loading() && project()" class="bp-fade-in">
+
+  <!-- Back -->
+  <button (click)="goBack()" style="display:inline-flex;align-items:center;gap:0.375rem;font-size:0.875rem;
+    color:var(--bp-text-muted);background:none;border:none;cursor:pointer;margin-bottom:1.25rem;padding:0;">
+    ← Back to Projects
+  </button>
+
+  <!-- ── Project Header ──────────────────────────────────────────────── -->
+  <div class="bp-card" style="padding:1.75rem;margin-bottom:1.5rem;">
+    <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;justify-content:space-between;">
+
+      <!-- Info -->
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:0.75rem;">
+          <div style="width:3rem;height:3rem;border-radius:0.75rem;background:var(--bp-primary);
+                      display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">🏗️</div>
+          <div>
+            <h2 style="font-size:1.375rem;font-weight:700;margin:0;">{{ project()!.name }}</h2>
+            <div style="font-size:0.8125rem;color:var(--bp-text-muted);margin-top:0.125rem;">
+              <span class="bp-badge" [ngClass]="milestoneStatusBadge(project()!.status)">{{ project()!.status }}</span>
+              <span *ngIf="project()!.contractorUserId" style="margin-left:0.5rem;">👷 Contractor assigned</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div style="margin-top:0.75rem;">
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--bp-text-muted);margin-bottom:0.375rem;">
+            <span>Milestone Progress</span>
+            <span>{{ completedMilestones() }}/{{ milestones().length }} ({{ progressPercent() }}%)</span>
+          </div>
+          <div class="bp-progress"><div class="bp-progress-bar" [style.width.%]="progressPercent()"></div></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <div style="text-align:center;padding:0.875rem 1.25rem;background:#f8fafc;border-radius:0.75rem;border:1px solid var(--bp-border);">
+          <div style="font-size:0.7rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;">Budget</div>
+          <div style="font-size:1.125rem;font-weight:700;margin-top:0.25rem;">KES {{ project()!.budget | number:'1.0-0' }}</div>
+        </div>
+        <div style="text-align:center;padding:0.875rem 1.25rem;background:#f0fdf4;border-radius:0.75rem;border:1px solid #bbf7d0;">
+          <div style="font-size:0.7rem;color:#065f46;text-transform:uppercase;letter-spacing:0.05em;">Escrow</div>
+          <div style="font-size:1.125rem;font-weight:700;color:#065f46;margin-top:0.25rem;">KES {{ balance() | number:'1.0-0' }}</div>
+        </div>
+        <div style="text-align:center;padding:0.875rem 1.25rem;background:#fef3c7;border-radius:0.75rem;border:1px solid #fde68a;">
+          <div style="font-size:0.7rem;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">Spent</div>
+          <div style="font-size:1.125rem;font-weight:700;color:#92400e;margin-top:0.25rem;">KES {{ totalExpenses() | number:'1.0-0' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions row -->
+    <div *ngIf="canEdit()" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--bp-border);
+                                   display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">
+      <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="showEditForm.set(!showEditForm())">
+        ✏️ {{ showEditForm() ? 'Cancel Edit' : 'Edit Project' }}
+      </button>
+      <button *ngIf="project()!.status === 'Draft' && !project()!.contractorUserId"
+              class="bp-btn bp-btn-secondary bp-btn-sm"
+              (click)="showAssignForm.set(!showAssignForm())">
+        👷 {{ showAssignForm() ? 'Cancel' : 'Assign Contractor' }}
+      </button>
+      <button *ngIf="project()!.status === 'Active'"
+              class="bp-btn bp-btn-ghost bp-btn-sm"
+              (click)="updateStatus('Completed')">
+        ✅ Mark Completed
+      </button>
+      <button *ngIf="project()!.status !== 'Cancelled' && project()!.status !== 'Completed'"
+              class="bp-btn bp-btn-danger bp-btn-sm"
+              (click)="updateStatus('Cancelled')">
+        ✕ Cancel Project
+      </button>
+    </div>
+
+    <!-- Edit form -->
+    <div *ngIf="showEditForm()" class="bp-fade-in"
+         style="margin-top:1rem;padding:1rem;background:#f8fafc;border-radius:0.75rem;border:1px solid var(--bp-border);">
+      <form [formGroup]="editForm" (ngSubmit)="saveEdit()"
+            style="display:grid;grid-template-columns:1fr 200px auto;gap:1rem;align-items:end;">
+        <div class="bp-form-group">
+          <label class="bp-label">Project Name</label>
+          <input class="bp-input" formControlName="name" />
+        </div>
+        <div class="bp-form-group">
+          <label class="bp-label">Budget (KES)</label>
+          <input class="bp-input" type="number" formControlName="budget" min="1" />
+        </div>
+        <button class="bp-btn bp-btn-primary" [disabled]="editForm.invalid || saving()" style="height:2.625rem;">
+          <span *ngIf="saving()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Assign contractor form -->
+    <div *ngIf="showAssignForm()" class="bp-fade-in"
+         style="margin-top:1rem;padding:1rem;background:#f8fafc;border-radius:0.75rem;border:1px solid var(--bp-border);">
+      <form [formGroup]="assignForm" (ngSubmit)="assignContractor()"
+            style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:end;">
+        <div class="bp-form-group">
+          <label class="bp-label">Contractor User ID (UUID)</label>
+          <input class="bp-input" formControlName="contractorUserId"
+                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+          <span *ngIf="assignForm.get('contractorUserId')?.invalid && assignForm.get('contractorUserId')?.touched"
+                style="font-size:0.75rem;color:var(--bp-danger);">Enter a valid UUID.</span>
+        </div>
+        <button class="bp-btn bp-btn-primary" [disabled]="assignForm.invalid || assigning()" style="height:2.625rem;">
+          <span *ngIf="assigning()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          {{ assigning() ? 'Assigning…' : 'Assign' }}
+        </button>
+      </form>
+      <div *ngIf="assignError()" class="bp-alert bp-alert-error" style="margin-top:0.75rem;">⚠️ {{ assignError() }}</div>
+    </div>
+
+    <!-- Fund escrow -->
+    <div *ngIf="isCustomer() || isAdmin()"
+         style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--bp-border);">
+      <form [formGroup]="fundForm" (ngSubmit)="fundEscrow()"
+            style="display:flex;align-items:flex-end;gap:0.75rem;flex-wrap:wrap;">
+        <div class="bp-form-group" style="flex:1;min-width:180px;max-width:280px;">
+          <label class="bp-label">Fund Escrow (KES)</label>
+          <input class="bp-input" type="number" min="1" formControlName="amount" />
+        </div>
+        <button class="bp-btn bp-btn-primary" [disabled]="fundForm.invalid || funding()" style="height:2.625rem;">
+          <span *ngIf="funding()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          🔒 {{ funding() ? 'Funding…' : 'Fund Escrow' }}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Tabs ────────────────────────────────────────────────────────── -->
+  <div class="bp-tabs">
+    <button class="bp-tab" [class.active]="activeTab()==='milestones'" (click)="activeTab.set('milestones')">
+      🎯 Milestones ({{ milestones().length }})
+    </button>
+    <button class="bp-tab" [class.active]="activeTab()==='expenses'" (click)="activeTab.set('expenses')">
+      💰 Expenses ({{ expenses().length }})
+    </button>
+    <button class="bp-tab" [class.active]="activeTab()==='photos'" (click)="activeTab.set('photos')">
+      📸 Photos ({{ photos().length }})
+    </button>
+  </div>
+
+  <!-- ── Milestones ──────────────────────────────────────────────────── -->
+  <div *ngIf="activeTab()==='milestones'" class="bp-fade-in">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+      <button *ngIf="project()!.status === 'Active'"
+              class="bp-btn bp-btn-primary bp-btn-sm"
+              (click)="showMilestoneForm.set(!showMilestoneForm())">
+        {{ showMilestoneForm() ? '✕ Cancel' : '+ Add Milestone' }}
+      </button>
+    </div>
+
+    <!-- Add form -->
+    <div *ngIf="showMilestoneForm()" class="bp-section bp-fade-in" style="margin-bottom:1rem;">
+      <div class="bp-section-header"><h3>New Milestone</h3></div>
+      <div class="bp-section-body">
+        <form [formGroup]="milestoneForm" (ngSubmit)="addMilestone()"
+              style="display:grid;grid-template-columns:1fr 160px 160px auto;gap:1rem;align-items:end;">
+          <div class="bp-form-group">
+            <label class="bp-label">Title *</label>
+            <input class="bp-input" formControlName="title" placeholder="e.g. Foundation Complete" />
+          </div>
+          <div class="bp-form-group">
+            <label class="bp-label">Amount (KES) *</label>
+            <input class="bp-input" type="number" min="1" formControlName="amount" />
+          </div>
+          <div class="bp-form-group">
+            <label class="bp-label">Due Date *</label>
+            <input class="bp-input" type="date" formControlName="dueDate" />
+          </div>
+          <button class="bp-btn bp-btn-primary" [disabled]="milestoneForm.invalid || addingMilestone()" style="height:2.625rem;">
+            <span *ngIf="addingMilestone()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+            {{ addingMilestone() ? 'Adding…' : 'Add' }}
+          </button>
+        </form>
+        <div *ngIf="milestoneError()" class="bp-alert bp-alert-error" style="margin-top:0.75rem;">⚠️ {{ milestoneError() }}</div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="milestones().length === 0" class="bp-card">
+      <div class="bp-empty-state">
+        <div class="bp-empty-icon">🎯</div>
+        <h3>No milestones yet</h3>
+        <p>{{ project()!.status === 'Active' ? 'Add milestones to track progress.' : 'Assign a contractor to activate the project first.' }}</p>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="bp-timeline" *ngIf="milestones().length > 0">
+      <div *ngFor="let m of milestones()" class="bp-timeline-item bp-fade-in">
+        <div class="bp-timeline-dot"
+             [class.done]="m.status === 'Approved'"
+             [class.active]="m.status === 'Completed'"
+             [class.pending]="m.status === 'Pending'"></div>
+        <div class="bp-card" style="padding:1.25rem;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.625rem;margin-bottom:0.375rem;">
+                <h4 style="font-size:0.9375rem;font-weight:600;margin:0;">{{ m.title }}</h4>
+                <span class="bp-badge" [ngClass]="milestoneStatusBadge(m.status)">{{ m.status }}</span>
+              </div>
+              <div style="font-size:0.8125rem;color:var(--bp-text-muted);">
+                Due: {{ m.dueDate | date:'mediumDate' }} · KES {{ m.amount | number:'1.0-0' }}
+              </div>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <!-- Contractor: mark complete -->
+              <button *ngIf="isContractor() && m.status === 'Pending'"
+                      class="bp-btn bp-btn-secondary bp-btn-sm"
+                      (click)="updateMilestoneStatus(m.id, 'Completed')">
+                🔨 Mark Complete
+              </button>
+              <!-- Customer: approve -->
+              <button *ngIf="isCustomer() && m.status === 'Completed'"
+                      class="bp-btn bp-btn-success bp-btn-sm"
+                      (click)="updateMilestoneStatus(m.id, 'Approved')">
+                ✅ Approve
+              </button>
+              <!-- Delete (Pending only) -->
+              <button *ngIf="canEdit() && m.status === 'Pending'"
+                      class="bp-btn bp-btn-danger bp-btn-sm"
+                      (click)="deletingMilestoneId.set(m.id)">
+                🗑️
+              </button>
+            </div>
+          </div>
+          <!-- Delete confirm -->
+          <div *ngIf="deletingMilestoneId() === m.id" class="bp-alert bp-alert-warning bp-fade-in"
+               style="margin-top:0.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <span>Delete milestone <strong>{{ m.title }}</strong>?</span>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="bp-btn bp-btn-danger bp-btn-sm" (click)="deleteMilestone(m.id)">Delete</button>
+              <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="deletingMilestoneId.set(null)">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Expenses ────────────────────────────────────────────────────── -->
+  <div *ngIf="activeTab()==='expenses'" class="bp-fade-in">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+      <button class="bp-btn bp-btn-primary bp-btn-sm" (click)="showExpenseForm.set(!showExpenseForm())">
+        {{ showExpenseForm() ? '✕ Cancel' : '+ Log Expense' }}
+      </button>
+    </div>
+
+    <!-- Add form -->
+    <div *ngIf="showExpenseForm()" class="bp-section bp-fade-in" style="margin-bottom:1rem;">
+      <div class="bp-section-header"><h3>Log Expense</h3></div>
+      <div class="bp-section-body">
+        <form [formGroup]="expenseForm" (ngSubmit)="addExpense()"
+              style="display:grid;grid-template-columns:1fr 160px 1fr auto;gap:1rem;align-items:end;">
+          <div class="bp-form-group">
+            <label class="bp-label">Description *</label>
+            <input class="bp-input" formControlName="title" placeholder="e.g. Cement purchase" />
+          </div>
+          <div class="bp-form-group">
+            <label class="bp-label">Amount (KES) *</label>
+            <input class="bp-input" type="number" min="1" formControlName="amount" />
+          </div>
+          <div class="bp-form-group">
+            <label class="bp-label">Receipt URL</label>
+            <input class="bp-input" formControlName="receiptUrl" placeholder="https://…" />
+          </div>
+          <button class="bp-btn bp-btn-primary" [disabled]="expenseForm.invalid || addingExpense()" style="height:2.625rem;">
+            <span *ngIf="addingExpense()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+            {{ addingExpense() ? 'Saving…' : 'Save' }}
+          </button>
+        </form>
+        <div *ngIf="expenseError()" class="bp-alert bp-alert-error" style="margin-top:0.75rem;">⚠️ {{ expenseError() }}</div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="expenses().length === 0" class="bp-card">
+      <div class="bp-empty-state">
+        <div class="bp-empty-icon">💰</div>
+        <h3>No expenses logged</h3>
+        <p>Track all project expenses to maintain budget visibility.</p>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="expenses().length > 0" class="bp-section">
+      <div class="bp-section-header">
+        <h3>Expense Log</h3>
+        <span style="font-size:0.875rem;font-weight:600;">Total: KES {{ totalExpenses() | number:'1.0-0' }}</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="bp-table">
+          <thead><tr><th>Description</th><th>Amount</th><th>Date</th><th>Receipt</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let e of expenses()">
+              <td style="font-weight:500;">{{ e.title }}</td>
+              <td>KES {{ e.amount | number:'1.0-0' }}</td>
+              <td style="color:var(--bp-text-muted);">{{ e.createdAt | date:'mediumDate' }}</td>
+              <td>
+                <a *ngIf="e.receiptUrl" [href]="e.receiptUrl" target="_blank" rel="noopener"
+                   style="color:var(--bp-primary);font-size:0.8125rem;text-decoration:none;">📎 View</a>
+                <span *ngIf="!e.receiptUrl" style="color:var(--bp-text-muted);font-size:0.8125rem;">—</span>
+              </td>
+              <td>
+                <button *ngIf="deletingExpenseId() !== e.id"
+                        class="bp-btn bp-btn-danger bp-btn-sm"
+                        (click)="deletingExpenseId.set(e.id)">🗑️</button>
+                <div *ngIf="deletingExpenseId() === e.id" style="display:flex;gap:0.375rem;">
+                  <button class="bp-btn bp-btn-danger bp-btn-sm" (click)="deleteExpense(e.id)">Delete</button>
+                  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="deletingExpenseId.set(null)">Cancel</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Photos ──────────────────────────────────────────────────────── -->
+  <div *ngIf="activeTab()==='photos'" class="bp-fade-in">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+      <button class="bp-btn bp-btn-primary bp-btn-sm" (click)="showPhotoForm.set(!showPhotoForm())">
+        {{ showPhotoForm() ? '✕ Cancel' : '+ Add Photo' }}
+      </button>
+    </div>
+
+    <!-- Add form -->
+    <div *ngIf="showPhotoForm()" class="bp-section bp-fade-in" style="margin-bottom:1rem;">
+      <div class="bp-section-header"><h3>Add Progress Photo</h3></div>
+      <div class="bp-section-body">
+        <form [formGroup]="photoForm" (ngSubmit)="addPhoto()"
+              style="display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:end;">
+          <div class="bp-form-group">
+            <label class="bp-label">Photo URL *</label>
+            <input class="bp-input" formControlName="url" placeholder="https://…" />
+          </div>
+          <div class="bp-form-group">
+            <label class="bp-label">Caption</label>
+            <input class="bp-input" formControlName="caption" placeholder="Optional description" />
+          </div>
+          <button class="bp-btn bp-btn-primary" [disabled]="photoForm.invalid || addingPhoto()" style="height:2.625rem;">
+            <span *ngIf="addingPhoto()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+            {{ addingPhoto() ? 'Adding…' : 'Add' }}
+          </button>
+        </form>
+        <div *ngIf="photoError()" class="bp-alert bp-alert-error" style="margin-top:0.75rem;">⚠️ {{ photoError() }}</div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="photos().length === 0" class="bp-card">
+      <div class="bp-empty-state">
+        <div class="bp-empty-icon">📸</div>
+        <h3>No photos yet</h3>
+        <p>Add photo URLs to document construction progress.</p>
+      </div>
+    </div>
+
+    <!-- Photo grid -->
+    <div *ngIf="photos().length > 0"
+         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">
+      <div *ngFor="let ph of photos()" class="bp-card bp-fade-in" style="overflow:hidden;">
+        <img [src]="ph.url" [alt]="ph.caption || 'Project photo'"
+             style="width:100%;height:160px;object-fit:cover;display:block;"
+             onerror="this.style.display='none'" />
+        <div style="padding:0.75rem;">
+          <div *ngIf="ph.caption" style="font-size:0.875rem;font-weight:500;margin-bottom:0.25rem;">{{ ph.caption }}</div>
+          <div style="font-size:0.75rem;color:var(--bp-text-muted);">{{ ph.createdAt | date:'mediumDate' }}</div>
+          <a [href]="ph.url" target="_blank" rel="noopener"
+             style="font-size:0.75rem;color:var(--bp-primary);text-decoration:none;display:block;margin-top:0.375rem;">
+            🔗 Open full size
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

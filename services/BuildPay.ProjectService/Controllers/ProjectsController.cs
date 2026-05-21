@@ -177,7 +177,159 @@ public sealed class ProjectsController : ControllerBase
             .OrderByDescending(p => p.CreatedAtUtc)
             .ToListAsync(ct);
 
-        return Ok(rows.Select(p => new { id = p.Id, p.Name, p.Budget, p.Status, p.ContractorUserId }));
+        return Ok(rows.Select(p => new
+        {
+            id = p.Id,
+            name = p.Name,
+            budget = p.Budget,
+            status = p.Status.ToString(),
+            contractorUserId = p.ContractorUserId,
+            createdAt = p.CreatedAtUtc
+        }));
+    }
+
+    // Alias used by the Angular frontend
+    [HttpGet("my")]
+    [Authorize(Roles = "Customer,Admin")]
+    public Task<ActionResult<object>> MyProjectsAlias(CancellationToken ct) => MyProjects(ct);
+
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    public async Task<ActionResult<object>> GetById([FromRoute] Guid id, CancellationToken ct)
+    {
+        var p = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (p is null) return NotFound();
+
+        return Ok(new
+        {
+            id = p.Id,
+            name = p.Name,
+            budget = p.Budget,
+            status = p.Status.ToString(),
+            contractorUserId = p.ContractorUserId,
+            createdAt = p.CreatedAtUtc
+        });
+    }
+
+    [HttpGet("{id:guid}/milestones")]
+    [Authorize]
+    public async Task<ActionResult<object>> GetMilestones([FromRoute] Guid id, CancellationToken ct)
+    {
+        var rows = await _db.Milestones.AsNoTracking()
+            .Where(m => m.ProjectId == id)
+            .OrderBy(m => m.DueDateUtc)
+            .ToListAsync(ct);
+
+        return Ok(rows.Select(m => new
+        {
+            id = m.Id,
+            projectId = m.ProjectId,
+            title = m.Title,
+            amount = m.Amount,
+            dueDate = m.DueDateUtc,
+            status = m.Status.ToString()
+        }));
+    }
+
+    [HttpGet("{id:guid}/expenses")]
+    [Authorize]
+    public async Task<ActionResult<object>> GetExpenses([FromRoute] Guid id, CancellationToken ct)
+    {
+        var rows = await _db.Expenses.AsNoTracking()
+            .Where(e => e.ProjectId == id)
+            .OrderByDescending(e => e.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return Ok(rows.Select(e => new
+        {
+            id = e.Id,
+            projectId = e.ProjectId,
+            title = e.Title,
+            amount = e.Amount,
+            receiptUrl = e.ReceiptUrl,
+            createdAt = e.CreatedAtUtc
+        }));
+    }
+
+    [HttpGet("{id:guid}/photos")]
+    [Authorize]
+    public async Task<ActionResult<object>> GetPhotos([FromRoute] Guid id, CancellationToken ct)
+    {
+        var rows = await _db.Photos.AsNoTracking()
+            .Where(ph => ph.ProjectId == id)
+            .OrderByDescending(ph => ph.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return Ok(rows.Select(ph => new
+        {
+            id = ph.Id,
+            projectId = ph.ProjectId,
+            url = ph.Url,
+            caption = ph.Caption,
+            createdAt = ph.CreatedAtUtc
+        }));
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Customer,Admin")]
+    public async Task<ActionResult> Delete([FromRoute] Guid id, CancellationToken ct)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!User.IsInRole("Admin") && project.CustomerUserId != caller) return Forbid();
+
+        if (project.Status == ProjectStatus.Active)
+            return BadRequest(new { message = "Cannot delete an active project. Cancel it first." });
+
+        _db.Projects.Remove(project);
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Customer,Admin")]
+    public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] UpdateProjectRequest request, CancellationToken ct)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!User.IsInRole("Admin") && project.CustomerUserId != caller) return Forbid();
+
+        if (!string.IsNullOrWhiteSpace(request.Name)) project.Name = request.Name.Trim();
+        if (request.Budget.HasValue && request.Budget > 0) project.Budget = request.Budget.Value;
+        if (request.Status.HasValue) project.Status = request.Status.Value;
+
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{projectId:guid}/milestones/{milestoneId:guid}")]
+    [Authorize(Roles = "Customer,Admin")]
+    public async Task<ActionResult> DeleteMilestone([FromRoute] Guid projectId, [FromRoute] Guid milestoneId, CancellationToken ct)
+    {
+        var milestone = await _db.Milestones.FirstOrDefaultAsync(m => m.Id == milestoneId && m.ProjectId == projectId, ct);
+        if (milestone is null) return NotFound();
+        if (milestone.Status != MilestoneStatus.Pending)
+            return BadRequest(new { message = "Only Pending milestones can be deleted." });
+
+        _db.Milestones.Remove(milestone);
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{projectId:guid}/expenses/{expenseId:guid}")]
+    [Authorize(Roles = "Customer,Contractor,Admin")]
+    public async Task<ActionResult> DeleteExpense([FromRoute] Guid projectId, [FromRoute] Guid expenseId, CancellationToken ct)
+    {
+        var expense = await _db.Expenses.FirstOrDefaultAsync(e => e.Id == expenseId && e.ProjectId == projectId, ct);
+        if (expense is null) return NotFound();
+
+        _db.Expenses.Remove(expense);
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
     }
 
     [HttpPost("{projectId:guid}/bids")]
@@ -210,6 +362,7 @@ public sealed class ProjectsController : ControllerBase
     }
 
     public sealed record CreateProjectRequest(string Name, decimal Budget);
+    public sealed record UpdateProjectRequest(string? Name, decimal? Budget, ProjectStatus? Status);
     public sealed record AssignContractorRequest(Guid ContractorUserId);
     public sealed record AddMilestoneRequest(string Title, decimal Amount, DateTime DueDateUtc);
     public sealed record UpdateMilestoneStatusRequest(MilestoneStatus Status);

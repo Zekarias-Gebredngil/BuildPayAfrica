@@ -1,0 +1,60 @@
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+
+<div *ngIf="!loading()" class="bp-fade-in">
+  <div style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.5rem;font-weight:700;margin:0 0 0.25rem;">Welcome back{{ displayName() ? ', ' + displayName() : '' }} 👷</h2>
+    <p style="color:var(--bp-text-muted);margin:0;">Your contractor workspace.</p>
+  </div>
+
+  <!-- Verification status banner -->
+  <div *ngIf="!isVerified" class="bp-alert bp-alert-warning" style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <span>⚠️ Your verification status is <strong>{{ verificationStatus }}</strong>. Complete verification to bid on projects.</span>
+    <a routerLink="/features/contractor/verification" class="bp-btn bp-btn-primary bp-btn-sm">Go to Verification →</a>
+  </div>
+  <div *ngIf="isVerified" class="bp-alert bp-alert-success" style="margin-bottom:1.5rem;">
+    ✅ You are a <strong>Verified Contractor</strong>. You can bid on and work on projects.
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="bp-stat-card">
+      <div class="stat-label">Verification</div>
+      <div class="stat-value" style="font-size:1.25rem;">{{ verificationStatus }}</div>
+    </div>
+    <div class="bp-stat-card">
+      <div class="stat-label">Unread Alerts</div>
+      <div class="stat-value" [style.color]="unreadCount > 0 ? 'var(--bp-primary)' : 'inherit'">{{ unreadCount }}</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="bp-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+    <h3 style="font-size:1rem;font-weight:600;margin:0 0 1rem;">Quick Actions</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+      <a routerLink="/features/contractor/verification" class="bp-btn bp-btn-primary bp-btn-sm">✅ Verification</a>
+      <a routerLink="/features/contractor/projects"     class="bp-btn bp-btn-secondary bp-btn-sm">🏗️ My Projects</a>
+      <a routerLink="/features/contractor/milestones"   class="bp-btn bp-btn-ghost bp-btn-sm">🎯 Milestones</a>
+      <a routerLink="/features/contractor/payments"     class="bp-btn bp-btn-ghost bp-btn-sm">💳 Payments</a>
+      <a routerLink="/features/contractor/earnings"     class="bp-btn bp-btn-ghost bp-btn-sm">💰 Earnings</a>
+    </div>
+  </div>
+
+  <!-- Recent notifications -->
+  <div class="bp-section">
+    <div class="bp-section-header">
+      <div><h3>Recent Alerts</h3></div>
+      <a routerLink="/features/contractor/notifications" class="bp-btn bp-btn-ghost bp-btn-sm">View all →</a>
+    </div>
+    <div class="bp-section-body" style="padding:0;">
+      <div *ngIf="notifications().length === 0" class="bp-empty-state" style="padding:2rem;">
+        <div class="bp-empty-icon">🔔</div><h3>All caught up!</h3>
+      </div>
+      <div *ngFor="let n of notifications(); let last = last"
+           style="padding:1rem 1.5rem;font-size:0.875rem;"
+           [style.border-bottom]="!last ? '1px solid var(--bp-border)' : ''">
+        {{ n.content }}
+        <div style="font-size:0.7rem;color:var(--bp-text-muted);margin-top:0.25rem;">{{ n.createdAtUtc | date:'shortDate' }}</div>
+      </div>
+    </div>
+  </div>
+</div>

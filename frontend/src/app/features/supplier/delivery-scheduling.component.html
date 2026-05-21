@@ -1,0 +1,36 @@
+<div class="bp-page-header"><h2>🚚 Delivery Scheduling</h2><p>Assign drivers to pending deliveries.</p></div>
+<div *ngIf="success()" class="bp-alert bp-alert-success" style="margin-bottom:1.5rem;">✅ Driver assigned successfully.</div>
+<div class="bp-section">
+  <div class="bp-section-header"><div><h3>Assign Driver</h3><p>Enter the delivery and driver IDs to schedule a delivery.</p></div></div>
+  <div class="bp-section-body">
+    <form [formGroup]="form" (ngSubmit)="assign()" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:end;">
+      <div class="bp-form-group">
+        <label class="bp-label">Delivery ID *</label>
+        <input class="bp-input" formControlName="deliveryId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Driver User ID *</label>
+        <input class="bp-input" formControlName="driverUserId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Pickup Address *</label>
+        <input class="bp-input" formControlName="pickupAddress" placeholder="e.g. Nairobi Warehouse, Mombasa Rd" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Dropoff Address *</label>
+        <input class="bp-input" formControlName="dropoffAddress" placeholder="e.g. Site A, Karen" />
+      </div>
+      <div class="bp-form-group">
+        <label class="bp-label">Delivery Fee (KES)</label>
+        <input class="bp-input" type="number" min="0" formControlName="deliveryFee" placeholder="Optional" />
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
+        <div *ngIf="error()" class="bp-alert bp-alert-error">⚠️ {{ error() }}</div>
+        <button type="submit" class="bp-btn bp-btn-primary" [disabled]="form.invalid || assigning()">
+          <span *ngIf="assigning()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+          {{ assigning() ? 'Assigning…' : '🚚 Assign Driver' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

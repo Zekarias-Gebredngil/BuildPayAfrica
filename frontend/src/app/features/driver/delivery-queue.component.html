@@ -1,0 +1,47 @@
+<div class="bp-page-header"><h2>📋 Delivery Queue</h2><p>Look up and manage your assigned deliveries.</p></div>
+<div class="bp-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+  <div class="bp-form-group" style="max-width:480px;">
+    <label class="bp-label">Enter Delivery ID</label>
+    <div style="display:flex;gap:0.75rem;">
+      <input class="bp-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+             [ngModel]="deliveryId()" (ngModelChange)="deliveryId.set($event)" (keyup.enter)="lookup()" />
+      <button class="bp-btn bp-btn-primary" (click)="lookup()" [disabled]="!deliveryId().trim() || loading()">
+        <span *ngIf="loading()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+        {{ loading() ? '…' : '🔍 Look up' }}
+      </button>
+    </div>
+  </div>
+</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+<div *ngIf="delivery()" class="bp-card bp-fade-in" style="padding:1.5rem;">
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+    <span style="font-size:1.5rem;">🚚</span>
+    <div>
+      <div style="font-size:0.9375rem;font-weight:600;">Delivery {{ delivery().id | slice:0:8 }}…</div>
+      <span class="bp-badge bp-badge-blue">{{ delivery().status }}</span>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+    <div *ngIf="delivery().pickupAddress">
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Pickup</div>
+      <div style="font-size:0.875rem;">{{ delivery().pickupAddress }}</div>
+    </div>
+    <div *ngIf="delivery().dropoffAddress">
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Dropoff</div>
+      <div style="font-size:0.875rem;">{{ delivery().dropoffAddress }}</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <button *ngIf="delivery().status === 'Assigned'"
+            class="bp-btn bp-btn-primary" [disabled]="updating()" (click)="updateStatus('In_Transit')">
+      <span *ngIf="updating()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+      🚚 Start Transit
+    </button>
+    <button *ngIf="delivery().status === 'In_Transit'"
+            class="bp-btn bp-btn-success" [disabled]="updating()" (click)="updateStatus('Delivered')">
+      <span *ngIf="updating()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+      ✅ Mark Delivered
+    </button>
+    <span *ngIf="delivery().status === 'Delivered'" style="color:var(--bp-success);font-weight:600;">✅ Delivery complete</span>
+  </div>
+</div>
