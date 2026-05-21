@@ -14,9 +14,9 @@ type Overview = {
 type PendingContractor = {
   id: string;
   userId: string;
-  licenseNumber: string;
-  rating: number;
-  verificationStatus: string;
+  licenceNumber: string;
+  status: string;
+  documentUrls: string[];
 };
 
 @Component({
@@ -46,14 +46,14 @@ export class AdminComponent {
       error: ()  => { this.error = 'Failed to load overview'; this.loading = false; }
     });
 
-    this.http.get<PendingContractor[]>(`/api/admin/contractors/pending`).subscribe({
+    this.http.get<PendingContractor[]>(`/api/contractors/verifications/pending`).subscribe({
       next:  (p) => (this.pending = p),
       error: ()  => (this.error = 'Failed to load pending contractors')
     });
   }
 
-  setStatus(contractorId: string, status: 'Approved' | 'Rejected') {
-    this.http.put(`/api/contractors/${contractorId}/verification-status`, { status }).subscribe({
+  setStatus(verificationId: string, status: 'Approved' | 'Rejected') {
+    this.http.put(`/api/contractors/verifications/${verificationId}/status`, { status, rejectionReason: status === 'Rejected' ? 'Rejected by admin' : null }).subscribe({
       next:  () => this.load(),
       error: ()  => (this.error = 'Failed to update contractor status')
     });
