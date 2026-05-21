@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BuildPay.ServiceDefaults;
-
+using System.Text.Json.Serialization;
 namespace BuildPay.IdentityService.Controllers;
 
 [ApiController]
@@ -109,22 +109,49 @@ public sealed class ContractorVerificationController : ControllerBase
             return NotFound();
         }
 
+        await ApplyStatusUpdate(record, request, ct);
+        return NoContent();
+    }
+
+    // Convenience for admin tooling: approve/reject a contractor by userId without needing the verificationId.
+    [HttpPut("by-user/{userId:guid}/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<object>> UpdateStatusByUser([FromRoute] Guid userId, [FromBody] UpdateStatusRequest request, CancellationToken ct)
+    {
+        var record = await _db.ContractorVerifications
+            .Include(x => x.Documents)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
+
+        if (record is null)
+        {
+            return NotFound();
+        }
+
+        await ApplyStatusUpdate(record, request, ct);
+        return Ok(new { contractorVerificationId = record.Id });
+    }
+
+    private async Task ApplyStatusUpdate(ContractorVerification record, UpdateStatusRequest request, CancellationToken ct)
+    {
         record.UpdatedAtUtc = DateTime.UtcNow;
+
+        IdentityContractorVerified? verifiedEvt = null;
+        IdentityContractorRejected? rejectedEvt = null;
+
         if (request.Status == ContractorVerificationStatus.Approved)
         {
             record.Status = ContractorVerificationStatus.Approved;
             record.RejectionReason = null;
 
-            var evt = IdentityContractorVerified.Create("BuildPay.IdentityService", record.UserId, record.Id);
-            await _publish.Publish(evt, ct);
+            verifiedEvt = IdentityContractorVerified.Create("BuildPay.IdentityService", record.UserId, record.Id);
         }
         else if (request.Status == ContractorVerificationStatus.Rejected)
         {
             record.Status = ContractorVerificationStatus.Rejected;
             record.RejectionReason = request.RejectionReason ?? string.Empty;
 
-            var evt = IdentityContractorRejected.Create("BuildPay.IdentityService", record.UserId, record.RejectionReason);
-            await _publish.Publish(evt, ct);
+            rejectedEvt = IdentityContractorRejected.Create("BuildPay.IdentityService", record.UserId, record.RejectionReason);
         }
         else
         {
@@ -133,7 +160,16 @@ public sealed class ContractorVerificationController : ControllerBase
         }
 
         await _db.SaveChangesAsync(ct);
-        return NoContent();
+
+        if (verifiedEvt is not null)
+        {
+            await _publish.Publish(verifiedEvt, ct);
+        }
+
+        if (rejectedEvt is not null)
+        {
+            await _publish.Publish(rejectedEvt, ct);
+        }
     }
 
     [HttpGet("/internal/stats/verifications/pending")]
@@ -144,11 +180,24 @@ public sealed class ContractorVerificationController : ControllerBase
         return Ok(new { count });
     }
 
-    private Guid GetUserId()
+//     private Guid GetUserId()
+//     {
+//         return UserContext.GetUserId(User);
+//     }
+
+//     public sealed record SubmitVerificationRequest(string LicenceNumber, List<string> DocumentUrls);
+//     public sealed record UpdateStatusRequest(ContractorVerificationStatus Status, string? RejectionReason);
+// }
+private Guid GetUserId()
     {
         return UserContext.GetUserId(User);
     }
 
     public sealed record SubmitVerificationRequest(string LicenceNumber, List<string> DocumentUrls);
-    public sealed record UpdateStatusRequest(ContractorVerificationStatus Status, string? RejectionReason);
+
+    public sealed record UpdateStatusRequest(
+        [property: JsonConverter(typeof(JsonStringEnumConverter))] 
+        ContractorVerificationStatus Status, 
+        string? RejectionReason
+    );
 }

@@ -47,6 +47,11 @@ public sealed class ProjectsController : ControllerBase
     [Authorize(Roles = "Customer,Admin")]
     public async Task<ActionResult> AssignContractor([FromRoute] Guid id, [FromBody] AssignContractorRequest request, CancellationToken ct)
     {
+        if (request.ContractorUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "ContractorUserId is required." });
+        }
+
         var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
         if (project is null)
         {
@@ -58,6 +63,20 @@ public sealed class ProjectsController : ControllerBase
         if (!isAdmin && project.CustomerUserId != caller)
         {
             return Forbid();
+        }
+
+        if (!isAdmin)
+        {
+            var verified = await _db.VerifiedContractors.AnyAsync(v => v.UserId == request.ContractorUserId, ct);
+            if (!verified)
+            {
+                return UnprocessableEntity(new { message = "Selected contractor is not verified yet." });
+            }
+        }
+
+        if (project.Status is ProjectStatus.Completed or ProjectStatus.Cancelled)
+        {
+            return BadRequest(new { message = "Cannot assign a contractor to a completed/cancelled project." });
         }
 
         project.ContractorUserId = request.ContractorUserId;
