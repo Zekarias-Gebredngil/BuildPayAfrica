@@ -9,6 +9,8 @@
   "verifyEmail": false,
   "requiredActions": [],
   "accessTokenLifespan": 1800,
+  "ssoSessionIdleTimeout": 86400,
+  "ssoSessionMaxLifespan": 86400,
   "roles": {
     "realm": [
       { "name": "Admin",      "description": "Platform administrator" },

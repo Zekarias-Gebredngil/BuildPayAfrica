@@ -76,6 +76,16 @@ frontend/.pnp.js
 # ─── Keycloak ─────────────────────────────────────────────────────────────────
 keycloak/buildpay-realm-live.json
 
+# ─── Observability runtime data ───────────────────────────────────────────────
+infra/grafana/data/
+infra/prometheus/data/
+infra/jaeger/data/
+
+# ─── Kubernetes generated / secrets ──────────────────────────────────────────
+infra/k8s/secrets/
+**/*.kubeconfig
+*.kubeconfig
+
 # ─── OS & Editor ──────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
