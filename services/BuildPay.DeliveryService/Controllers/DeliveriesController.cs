@@ -1,10 +1,10 @@
 using BuildPay.Contracts;
+using BuildPay.ServiceDefaults;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace BuildPay.DeliveryService.Controllers;
 
@@ -32,6 +32,11 @@ public sealed class DeliveriesController : ControllerBase
         if (delivery is null)
         {
             return NotFound();
+        }
+
+        if (!CanReadDelivery(delivery))
+        {
+            return Forbid();
         }
 
         return Ok(new
@@ -78,6 +83,15 @@ public sealed class DeliveriesController : ControllerBase
             return NotFound();
         }
 
+        if (!UserContext.IsAdmin(User))
+        {
+            var caller = GetUserId();
+            if (!delivery.DriverUserId.HasValue || delivery.DriverUserId.Value != caller)
+            {
+                return Forbid();
+            }
+        }
+
         delivery.Status = request.Status;
         delivery.UpdatedAtUtc = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
@@ -105,6 +119,15 @@ public sealed class DeliveriesController : ControllerBase
             return NotFound();
         }
 
+        if (!UserContext.IsAdmin(User))
+        {
+            var caller = GetUserId();
+            if (!delivery.DriverUserId.HasValue || delivery.DriverUserId.Value != caller)
+            {
+                return Forbid();
+            }
+        }
+
         var update = new DeliveryLocationUpdate
         {
             DeliveryId = id,
@@ -121,6 +144,25 @@ public sealed class DeliveriesController : ControllerBase
         return NoContent();
     }
 
+    // Internal service-to-service lookup used for authorization in other services (e.g., Marketplace driver status updates)
+    // Not exposed via Nginx because it does not route /internal/*.
+    [HttpGet("/internal/deliveries/by-order/{orderId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> ByOrder([FromRoute] Guid orderId, CancellationToken ct)
+    {
+        var delivery = await _db.Deliveries.AsNoTracking().FirstOrDefaultAsync(d => d.OrderId == orderId, ct);
+        if (delivery is null) return NotFound();
+
+        return Ok(new
+        {
+            deliveryId = delivery.Id,
+            orderId = delivery.OrderId,
+            driverUserId = delivery.DriverUserId,
+            customerUserId = delivery.CustomerUserId,
+            status = delivery.Status
+        });
+    }
+
     [HttpGet("/internal/stats/deliveries")]
     [AllowAnonymous]
     public async Task<ActionResult<object>> DeliveriesCount(CancellationToken ct)
@@ -129,10 +171,22 @@ public sealed class DeliveriesController : ControllerBase
         return Ok(new { count });
     }
 
-    private Guid GetUserId()
+    private Guid GetUserId() => UserContext.GetUserId(User);
+
+    private bool CanReadDelivery(Delivery delivery)
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        if (UserContext.IsAdmin(User)) return true;
+
+        var caller = GetUserId();
+        if (caller == Guid.Empty) return false;
+
+        // Supplier reads are allowed at scaffold-level (no supplier mapping exists on Delivery).
+        if (User.IsInRole("Supplier")) return true;
+
+        if (User.IsInRole("Customer") && delivery.CustomerUserId == caller) return true;
+        if (User.IsInRole("Driver") && delivery.DriverUserId.HasValue && delivery.DriverUserId.Value == caller) return true;
+
+        return false;
     }
 
     public sealed record AssignDriverRequest(Guid DriverUserId, string PickupAddress, string DropoffAddress, decimal? DeliveryFee);

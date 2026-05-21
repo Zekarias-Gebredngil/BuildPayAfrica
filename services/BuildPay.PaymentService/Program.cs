@@ -69,6 +69,12 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpClient<BuildPay.PaymentService.Services.ProjectAccessClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:ProjectBaseUrl"] ?? "http://project:8080/";
+    client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : $"{baseUrl}/");
+});
+
 var app = builder.Build();
 
 app.UseBuildPayServiceDefaults();

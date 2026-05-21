@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using BuildPay.ServiceDefaults;
 
 namespace BuildPay.MarketplaceService.Controllers;
 
@@ -76,8 +76,7 @@ public sealed class ProductsController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        return UserContext.GetUserId(User);
     }
 
     public sealed record CreateProductRequest(string Name, decimal Price, int Quantity, Guid CategoryId, string? ImageUrl);

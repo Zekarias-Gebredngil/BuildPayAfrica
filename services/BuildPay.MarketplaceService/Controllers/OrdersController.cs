@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Security.Claims;
+using BuildPay.ServiceDefaults;
+using BuildPay.MarketplaceService.Services;
 using System.Text.Json;
 
 namespace BuildPay.MarketplaceService.Controllers;
@@ -17,12 +18,14 @@ public sealed class OrdersController : ControllerBase
     private readonly MarketplaceDbContext _db;
     private readonly IDistributedCache _cache;
     private readonly IPublishEndpoint _publish;
+    private readonly DeliveryLookupClient _deliveryLookup;
 
-    public OrdersController(MarketplaceDbContext db, IDistributedCache cache, IPublishEndpoint publish)
+    public OrdersController(MarketplaceDbContext db, IDistributedCache cache, IPublishEndpoint publish, DeliveryLookupClient deliveryLookup)
     {
         _db = db;
         _cache = cache;
         _publish = publish;
+        _deliveryLookup = deliveryLookup;
     }
 
     [HttpPost]
@@ -87,12 +90,22 @@ public sealed class OrdersController : ControllerBase
     [Authorize(Roles = "Customer,Admin")]
     public async Task<ActionResult<object>> History(CancellationToken ct)
     {
-        var userId = GetUserId();
-        var rows = await _db.Orders.AsNoTracking()
+        var query = _db.Orders.AsNoTracking()
             .Include(o => o.Items)
-            .Where(o => o.CustomerUserId == userId)
             .OrderByDescending(o => o.CreatedAtUtc)
-            .ToListAsync(ct);
+            .AsQueryable();
+
+        if (!UserContext.IsAdmin(User))
+        {
+            var userId = GetUserId();
+            query = query.Where(o => o.CustomerUserId == userId);
+        }
+        else
+        {
+            query = query.Take(200);
+        }
+
+        var rows = await query.ToListAsync(ct);
 
         return Ok(rows.Select(o => new
         {
@@ -112,6 +125,33 @@ public sealed class OrdersController : ControllerBase
         if (order is null)
         {
             return NotFound();
+        }
+
+        if (!UserContext.IsAdmin(User))
+        {
+            var caller = GetUserId();
+
+            if (User.IsInRole("Supplier"))
+            {
+                var hasAnyMyProduct = await _db.OrderItems.AsNoTracking()
+                    .Where(oi => oi.OrderId == id)
+                    .Join(_db.Products.AsNoTracking(), oi => oi.ProductId, p => p.Id, (_, p) => p.SupplierUserId)
+                    .AnyAsync(supplierUserId => supplierUserId == caller, ct);
+
+                if (!hasAnyMyProduct)
+                {
+                    return Forbid();
+                }
+            }
+            else if (User.IsInRole("Driver"))
+            {
+                var (_, delivery) = await _deliveryLookup.GetByOrderAsync(id, ct);
+
+                if (delivery?.DriverUserId is null || delivery.DriverUserId.Value != caller)
+                {
+                    return Forbid();
+                }
+            }
         }
 
         order.Status = request.Status;
@@ -156,8 +196,7 @@ public sealed class OrdersController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        return UserContext.GetUserId(User);
     }
 
     public sealed record UpdateStatusRequest(OrderStatus Status);

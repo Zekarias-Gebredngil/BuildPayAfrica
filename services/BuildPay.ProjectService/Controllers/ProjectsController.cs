@@ -1,9 +1,9 @@
 using BuildPay.Contracts;
+using BuildPay.ServiceDefaults;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace BuildPay.ProjectService.Controllers;
 
@@ -54,7 +54,7 @@ public sealed class ProjectsController : ControllerBase
         }
 
         var caller = GetUserId();
-        var isAdmin = User.IsInRole("Admin");
+        var isAdmin = UserContext.IsAdmin(User);
         if (!isAdmin && project.CustomerUserId != caller)
         {
             return Forbid();
@@ -75,6 +75,12 @@ public sealed class ProjectsController : ControllerBase
         if (project is null)
         {
             return NotFound();
+        }
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
+        {
+            return Forbid();
         }
 
         if (project.Status != ProjectStatus.Active)
@@ -106,6 +112,28 @@ public sealed class ProjectsController : ControllerBase
             return NotFound();
         }
 
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
+        {
+            return Forbid();
+        }
+
+        if (!UserContext.IsAdmin(User))
+        {
+            if (request.Status == MilestoneStatus.Completed && project.ContractorUserId != caller)
+            {
+                return Forbid();
+            }
+
+            if (request.Status == MilestoneStatus.Approved && project.CustomerUserId != caller)
+            {
+                return Forbid();
+            }
+        }
+
         milestone.Status = request.Status;
         await _db.SaveChangesAsync(ct);
 
@@ -126,10 +154,13 @@ public sealed class ProjectsController : ControllerBase
     [Authorize(Roles = "Customer,Contractor,Admin")]
     public async Task<ActionResult<object>> AddExpense([FromRoute] Guid projectId, [FromBody] AddExpenseRequest request, CancellationToken ct)
     {
-        var exists = await _db.Projects.AnyAsync(p => p.Id == projectId, ct);
-        if (!exists)
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
         {
-            return NotFound();
+            return Forbid();
         }
 
         var expense = new ProjectExpense
@@ -149,10 +180,13 @@ public sealed class ProjectsController : ControllerBase
     [Authorize(Roles = "Customer,Contractor,Admin")]
     public async Task<ActionResult<object>> AddPhoto([FromRoute] Guid projectId, [FromBody] AddPhotoRequest request, CancellationToken ct)
     {
-        var exists = await _db.Projects.AnyAsync(p => p.Id == projectId, ct);
-        if (!exists)
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
         {
-            return NotFound();
+            return Forbid();
         }
 
         var photo = new ProjectPhoto
@@ -193,12 +227,59 @@ public sealed class ProjectsController : ControllerBase
     [Authorize(Roles = "Customer,Admin")]
     public Task<ActionResult<object>> MyProjectsAlias(CancellationToken ct) => MyProjects(ct);
 
+    [HttpGet("assigned")]
+    [Authorize(Roles = "Contractor,Admin")]
+    public async Task<ActionResult<object>> AssignedProjects(CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var rows = await _db.Projects.AsNoTracking()
+            .Where(p => p.ContractorUserId == userId)
+            .OrderByDescending(p => p.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return Ok(rows.Select(p => new
+        {
+            id = p.Id,
+            name = p.Name,
+            budget = p.Budget,
+            status = p.Status.ToString(),
+            contractorUserId = p.ContractorUserId,
+            createdAt = p.CreatedAtUtc
+        }));
+    }
+
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<object>> AllProjects(CancellationToken ct)
+    {
+        var rows = await _db.Projects.AsNoTracking()
+            .OrderByDescending(p => p.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return Ok(rows.Select(p => new
+        {
+            id = p.Id,
+            name = p.Name,
+            budget = p.Budget,
+            status = p.Status.ToString(),
+            contractorUserId = p.ContractorUserId,
+            customerUserId = p.CustomerUserId,
+            createdAt = p.CreatedAtUtc
+        }));
+    }
+
     [HttpGet("{id:guid}")]
     [Authorize]
     public async Task<ActionResult<object>> GetById([FromRoute] Guid id, CancellationToken ct)
     {
         var p = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (p is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(p, caller))
+        {
+            return Forbid();
+        }
 
         return Ok(new
         {
@@ -215,6 +296,15 @@ public sealed class ProjectsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<object>> GetMilestones([FromRoute] Guid id, CancellationToken ct)
     {
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
+        {
+            return Forbid();
+        }
+
         var rows = await _db.Milestones.AsNoTracking()
             .Where(m => m.ProjectId == id)
             .OrderBy(m => m.DueDateUtc)
@@ -235,6 +325,15 @@ public sealed class ProjectsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<object>> GetExpenses([FromRoute] Guid id, CancellationToken ct)
     {
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
+        {
+            return Forbid();
+        }
+
         var rows = await _db.Expenses.AsNoTracking()
             .Where(e => e.ProjectId == id)
             .OrderByDescending(e => e.CreatedAtUtc)
@@ -255,6 +354,15 @@ public sealed class ProjectsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<object>> GetPhotos([FromRoute] Guid id, CancellationToken ct)
     {
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
+        {
+            return Forbid();
+        }
+
         var rows = await _db.Photos.AsNoTracking()
             .Where(ph => ph.ProjectId == id)
             .OrderByDescending(ph => ph.CreatedAtUtc)
@@ -278,7 +386,7 @@ public sealed class ProjectsController : ControllerBase
         if (project is null) return NotFound();
 
         var caller = GetUserId();
-        if (!User.IsInRole("Admin") && project.CustomerUserId != caller) return Forbid();
+        if (!UserContext.IsAdmin(User) && project.CustomerUserId != caller) return Forbid();
 
         if (project.Status == ProjectStatus.Active)
             return BadRequest(new { message = "Cannot delete an active project. Cancel it first." });
@@ -296,7 +404,7 @@ public sealed class ProjectsController : ControllerBase
         if (project is null) return NotFound();
 
         var caller = GetUserId();
-        if (!User.IsInRole("Admin") && project.CustomerUserId != caller) return Forbid();
+        if (!UserContext.IsAdmin(User) && project.CustomerUserId != caller) return Forbid();
 
         if (!string.IsNullOrWhiteSpace(request.Name)) project.Name = request.Name.Trim();
         if (request.Budget.HasValue && request.Budget > 0) project.Budget = request.Budget.Value;
@@ -315,6 +423,15 @@ public sealed class ProjectsController : ControllerBase
         if (milestone.Status != MilestoneStatus.Pending)
             return BadRequest(new { message = "Only Pending milestones can be deleted." });
 
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!UserContext.IsAdmin(User) && project.CustomerUserId != caller)
+        {
+            return Forbid();
+        }
+
         _db.Milestones.Remove(milestone);
         await _db.SaveChangesAsync(ct);
         return NoContent();
@@ -326,6 +443,15 @@ public sealed class ProjectsController : ControllerBase
     {
         var expense = await _db.Expenses.FirstOrDefaultAsync(e => e.Id == expenseId && e.ProjectId == projectId, ct);
         if (expense is null) return NotFound();
+
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId, ct);
+        if (project is null) return NotFound();
+
+        var caller = GetUserId();
+        if (!CanAccessProject(project, caller))
+        {
+            return Forbid();
+        }
 
         _db.Expenses.Remove(expense);
         await _db.SaveChangesAsync(ct);
@@ -357,8 +483,16 @@ public sealed class ProjectsController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        return UserContext.GetUserId(User);
+    }
+
+    private bool CanAccessProject(Project project, Guid callerUserId)
+    {
+        if (UserContext.IsAdmin(User)) return true;
+        if (callerUserId == Guid.Empty) return false;
+        if (project.CustomerUserId == callerUserId) return true;
+        if (project.ContractorUserId.HasValue && project.ContractorUserId.Value == callerUserId) return true;
+        return false;
     }
 
     public sealed record CreateProjectRequest(string Name, decimal Budget);

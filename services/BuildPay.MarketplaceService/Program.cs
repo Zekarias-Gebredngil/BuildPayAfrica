@@ -70,6 +70,12 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpClient<BuildPay.MarketplaceService.Services.DeliveryLookupClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:DeliveryBaseUrl"] ?? "http://delivery:8080/";
+    client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : $"{baseUrl}/");
+});
+
 var app = builder.Build();
 
 app.UseBuildPayServiceDefaults();

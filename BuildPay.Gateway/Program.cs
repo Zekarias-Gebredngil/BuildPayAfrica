@@ -52,6 +52,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
 });
 
+builder.Services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation, KeycloakRoleClaimsTransformation>();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
