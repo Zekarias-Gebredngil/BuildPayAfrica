@@ -1,0 +1,82 @@
+<div class="bp-page-header"><h2>🚚 Delivery Tracking</h2><p>Track your material deliveries in real time.</p></div>
+
+<!-- Search -->
+<div class="bp-card" style="padding:1.5rem;margin-bottom:1.5rem;">
+  <div class="bp-form-group" style="max-width:480px;">
+    <label class="bp-label">Enter Delivery ID</label>
+    <div style="display:flex;gap:0.75rem;">
+      <input class="bp-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+             [ngModel]="deliveryId()" (ngModelChange)="deliveryId.set($event)"
+             (keyup.enter)="track()" />
+      <button class="bp-btn bp-btn-primary" (click)="track()" [disabled]="!deliveryId().trim() || loading()">
+        <span *ngIf="loading()" class="bp-spinner" style="width:1rem;height:1rem;border-width:2px;border-top-color:#fff;"></span>
+        {{ loading() ? 'Tracking…' : '🔍 Track' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<!-- Delivery card -->
+<div *ngIf="delivery()" class="bp-card bp-fade-in" style="padding:1.75rem;">
+
+  <!-- Status pipeline -->
+  <div style="display:flex;gap:0;margin-bottom:2rem;overflow-x:auto;">
+    <div *ngFor="let step of statusSteps; let i = index"
+         style="flex:1;text-align:center;position:relative;min-width:100px;">
+      <div *ngIf="i > 0" style="position:absolute;left:0;top:1.125rem;width:50%;height:2px;"
+           [style.background]="stepIndex(delivery()!.status) >= i ? 'var(--bp-primary)' : 'var(--bp-border)'"></div>
+      <div *ngIf="i < 3" style="position:absolute;right:0;top:1.125rem;width:50%;height:2px;"
+           [style.background]="stepIndex(delivery()!.status) > i ? 'var(--bp-primary)' : 'var(--bp-border)'"></div>
+      <div style="width:2.25rem;height:2.25rem;border-radius:50%;margin:0 auto 0.5rem;
+                  display:flex;align-items:center;justify-content:center;font-size:1rem;
+                  position:relative;z-index:1;border:2px solid;"
+           [style.background]="stepIndex(delivery()!.status) >= i ? 'var(--bp-primary)' : '#fff'"
+           [style.border-color]="stepIndex(delivery()!.status) >= i ? 'var(--bp-primary)' : 'var(--bp-border)'"
+           [style.color]="stepIndex(delivery()!.status) >= i ? '#fff' : 'var(--bp-text-muted)'">
+        {{ statusIcon(step) }}
+      </div>
+      <div style="font-size:0.7rem;color:var(--bp-text-muted);">{{ statusLabel(step) }}</div>
+    </div>
+  </div>
+
+  <!-- Details grid -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div>
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Delivery ID</div>
+      <div style="font-family:monospace;font-size:0.8125rem;">{{ delivery()!.id }}</div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Order ID</div>
+      <div style="font-family:monospace;font-size:0.8125rem;">{{ delivery()!.orderId }}</div>
+    </div>
+    <div *ngIf="delivery()!.pickupAddress">
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Pickup</div>
+      <div style="font-size:0.875rem;">{{ delivery()!.pickupAddress }}</div>
+    </div>
+    <div *ngIf="delivery()!.dropoffAddress">
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Dropoff</div>
+      <div style="font-size:0.875rem;">{{ delivery()!.dropoffAddress }}</div>
+    </div>
+    <div *ngIf="delivery()!.deliveryFee">
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Delivery Fee</div>
+      <div style="font-size:0.875rem;font-weight:600;">KES {{ delivery()!.deliveryFee | number:'1.0-0' }}</div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Last Updated</div>
+      <div style="font-size:0.875rem;">{{ delivery()!.updatedAtUtc | date:'medium' }}</div>
+    </div>
+  </div>
+
+  <!-- Map placeholder -->
+  <div style="margin-top:1.5rem;height:200px;background:linear-gradient(135deg,#dbeafe,#ede9fe);
+              border-radius:0.75rem;display:flex;align-items:center;justify-content:center;
+              border:1px solid var(--bp-border);">
+    <div style="text-align:center;color:var(--bp-text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">🗺️</div>
+      <div style="font-size:0.875rem;font-weight:500;">Live GPS Map</div>
+      <div style="font-size:0.75rem;">Real-time tracking via SignalR — available when driver is In Transit</div>
+    </div>
+  </div>
+</div>
