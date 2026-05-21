@@ -3,6 +3,7 @@
 [Oo]bj/
 [Oo]ut/
 publish-out/
+publish-project/
 *.user
 *.suo
 *.userosscache
@@ -102,3 +103,7 @@ Desktop.ini
 # ─── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 logs/
+
+# Temporary files
+*.tmp
+*.bak
