@@ -1,0 +1,6 @@
+@BuildPay.MarketplaceService_HostAddress = http://localhost:5072
+
+GET {{BuildPay.MarketplaceService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
