@@ -1,0 +1,6 @@
+@BuildPay.Gateway_HostAddress = http://localhost:5139
+
+GET {{BuildPay.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
