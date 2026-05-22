@@ -1,3 +1,375 @@
+# services:
+
+#   # ── Infrastructure ──────────────────────────────────────────────────────────
+
+#   db:
+#     image: postgres:16-alpine
+#     container_name: buildpay-db
+#     environment:
+#       POSTGRES_USER:     ${POSTGRES_USER}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#       POSTGRES_DB:       ${POSTGRES_DB}
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+#     networks:
+#       - buildpay-network
+
+#   redis:
+#     image: redis:7-alpine
+#     container_name: buildpay-redis
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis_data:/data
+#     networks:
+#       - buildpay-network
+
+#   rabbitmq:
+#     image: rabbitmq:3-management-alpine
+#     container_name: buildpay-rabbitmq
+#     environment:
+#       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+#       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     networks:
+#       - buildpay-network
+
+#   jaeger:
+#     image: jaegertracing/all-in-one@sha256:ab6f1a1f0fb49ea08bcd19f6b84f6081d0d44b364b6de148e1798eb5816bacac
+#     container_name: buildpay-jaeger
+#     environment:
+#       COLLECTOR_OTLP_ENABLED: "true"
+#       GRPC_GO_LOG_SEVERITY_LEVEL: "ERROR"
+#       GRPC_GO_LOG_VERBOSITY_LEVEL: "0"
+#     ports:
+#       - "16686:16686"
+#       - "4317:4317"
+#     networks:
+#       - buildpay-network
+
+#   prometheus:
+#     image: prom/prometheus:v2.54.1
+#     container_name: buildpay-prometheus
+#     volumes:
+#       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+#     ports:
+#       - "9090:9090"
+#     networks:
+#       - buildpay-network
+
+#   grafana:
+#     image: grafana/grafana:11.1.4
+#     container_name: buildpay-grafana
+#     environment:
+#       GF_SECURITY_ADMIN_USER:     ${GRAFANA_ADMIN_USER}
+#       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+#     volumes:
+#       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+#     ports:
+#       - "3000:3000"
+#     networks:
+#       - buildpay-network
+
+#   keycloak:
+#     image: quay.io/keycloak/keycloak:24.0.0
+#     container_name: buildpay-keycloak
+#     environment:
+#       KC_DB:                  postgres
+#       KC_DB_URL:              jdbc:postgresql://db:5432/keycloak_db
+#       KC_DB_USERNAME:         ${KEYCLOAK_DB_USERNAME}
+#       KC_DB_PASSWORD:         ${KEYCLOAK_DB_PASSWORD}
+#       KEYCLOAK_ADMIN:         ${KEYCLOAK_ADMIN}
+#       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+#     ports:
+#       - "8080:8080"
+#     depends_on:
+#       - db
+#     command: start-dev --import-realm
+#     volumes:
+#       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+#     healthcheck:
+#       test: ["CMD-SHELL", "grep -c '1F90' /proc/net/tcp6 > /dev/null 2>&1"]
+#       interval: 15s
+#       timeout: 5s
+#       retries: 10
+#       start_period: 90s
+#     networks:
+#       - buildpay-network
+
+#   # ── Monolith API (legacy — proxied by gateway during migration) ─────────────
+
+#   api:
+#     build:
+#       context: .
+#       dockerfile: BuildPay.API/Dockerfile
+#     container_name: buildpay-api
+#     environment:
+#       ASPNETCORE_URLS: http://+:8081
+#       ConnectionStrings__DefaultConnection: >-
+#         Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       Keycloak__Authority:        http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:         buildpay-api
+#       Keycloak__BaseUrl:          http://keycloak:8080
+#       Keycloak__Realm:            buildpay
+#       Keycloak__AdminRealm:       master
+#       Keycloak__AdminClientId:    admin-cli
+#       Keycloak__AdminUsername:    ${KEYCLOAK_ADMIN}
+#       Keycloak__AdminPassword:    ${KEYCLOAK_ADMIN_PASSWORD}
+#       Keycloak__PublicClientId:   buildpay-web
+#     ports:
+#       - "8081:8081"
+#     depends_on:
+#       db:
+#         condition: service_started
+#       redis:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     restart: on-failure
+#     networks:
+#       - buildpay-network
+
+#   # ── Microservices ───────────────────────────────────────────────────────────
+
+#   identity:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.IdentityService/Dockerfile
+#     container_name: buildpay-identity
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__IdentityDb: >-
+#         Host=db;Database=identity_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       ConnectionStrings__RabbitMq:   rabbitmq
+#       Keycloak__BaseUrl:             http://keycloak:8080
+#       Keycloak__Realm:               buildpay
+#       Keycloak__AdminRealm:          master
+#       Keycloak__AdminClientId:       admin-cli
+#       Keycloak__AdminUsername:       ${KEYCLOAK_ADMIN}
+#       Keycloak__AdminPassword:       ${KEYCLOAK_ADMIN_PASSWORD}
+#       Keycloak__PublicClientId:      buildpay-web
+#       Keycloak__Authority:           http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:            buildpay-api
+#       AWS_ACCESS_KEY_ID:             ${AWS_ACCESS_KEY_ID}
+#       AWS_SECRET_ACCESS_KEY:         ${AWS_SECRET_ACCESS_KEY}
+#       AWS_REGION:                    ${AWS_REGION}
+#       S3__Bucket:                    ${S3_BUCKET}
+#       OTEL_EXPORTER_OTLP_ENDPOINT:   http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_started
+#     networks:
+#       - buildpay-network
+
+#   marketplace:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.MarketplaceService/Dockerfile
+#     container_name: buildpay-marketplace
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__MarketplaceDb: >-
+#         Host=db;Database=marketplace_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       ConnectionStrings__RabbitMq:      rabbitmq
+#       ConnectionStrings__Redis:         redis:6379
+#       Keycloak__Authority:              http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:               buildpay-api
+#       OTEL_EXPORTER_OTLP_ENDPOINT:      http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       redis:
+#         condition: service_started
+#       rabbitmq:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     networks:
+#       - buildpay-network
+
+#   project:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.ProjectService/Dockerfile
+#     container_name: buildpay-project
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__ProjectDb: >-
+#         Host=db;Database=project_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       ConnectionStrings__RabbitMq:  rabbitmq
+#       Keycloak__Authority:          http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:           buildpay-api
+#       AWS_ACCESS_KEY_ID:            ${AWS_ACCESS_KEY_ID}
+#       AWS_SECRET_ACCESS_KEY:        ${AWS_SECRET_ACCESS_KEY}
+#       AWS_REGION:                   ${AWS_REGION}
+#       S3__Bucket:                   ${S3_BUCKET}
+#       OTEL_EXPORTER_OTLP_ENDPOINT:  http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       rabbitmq:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     networks:
+#       - buildpay-network
+
+#   payment:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.PaymentService/Dockerfile
+#     container_name: buildpay-payment
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__PaymentDb: >-
+#         Host=db;Database=payment_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       ConnectionStrings__RabbitMq:  rabbitmq
+#       Keycloak__Authority:          http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:           buildpay-api
+#       OTEL_EXPORTER_OTLP_ENDPOINT:  http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       rabbitmq:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     networks:
+#       - buildpay-network
+
+#   delivery:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.DeliveryService/Dockerfile
+#     container_name: buildpay-delivery
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__DeliveryDb: >-
+#         Host=db;Database=delivery_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       ConnectionStrings__RabbitMq:   rabbitmq
+#       Keycloak__Authority:           http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:            buildpay-api
+#       OTEL_EXPORTER_OTLP_ENDPOINT:   http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       rabbitmq:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     networks:
+#       - buildpay-network
+
+#   notification:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.NotificationService/Dockerfile
+#     container_name: buildpay-notification
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__NotificationDb: >-
+#         Host=db;Database=notification_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       ConnectionStrings__RabbitMq:       rabbitmq
+#       Keycloak__Authority:               http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:                buildpay-api
+#       OTEL_EXPORTER_OTLP_ENDPOINT:       http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       rabbitmq:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     networks:
+#       - buildpay-network
+
+#   userprofile:
+#     build:
+#       context: .
+#       dockerfile: services/BuildPay.UserProfileService/Dockerfile
+#     container_name: buildpay-userprofile
+#     environment:
+#       ASPNETCORE_URLS: http://+:8080
+#       ConnectionStrings__UserProfileDb: >-
+#         Host=db;Database=userprofile_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+#       Keycloak__Authority:              http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:               buildpay-api
+#       OTEL_EXPORTER_OTLP_ENDPOINT:      http://jaeger:4317
+#     depends_on:
+#       db:
+#         condition: service_started
+#       keycloak:
+#         condition: service_healthy
+#     networks:
+#       - buildpay-network
+
+#   # ── API Gateway ─────────────────────────────────────────────────────────────
+
+#   gateway:
+#     build:
+#       context: .
+#       dockerfile: BuildPay.Gateway/Dockerfile
+#     container_name: buildpay-gateway
+#     environment:
+#       ASPNETCORE_URLS:             http://+:8082
+#       Keycloak__Authority:         http://keycloak:8080/realms/buildpay
+#       Keycloak__Audience:          buildpay-api
+#       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+#     ports:
+#       - "8082:8082"
+#     depends_on:
+#       identity:
+#         condition: service_started
+#       marketplace:
+#         condition: service_started
+#       project:
+#         condition: service_started
+#       payment:
+#         condition: service_started
+#       delivery:
+#         condition: service_started
+#       notification:
+#         condition: service_started
+#       userprofile:
+#         condition: service_started
+#       api:
+#         condition: service_started
+#     networks:
+#       - buildpay-network
+
+#   # ── Frontend ────────────────────────────────────────────────────────────────
+
+#   web:
+#     build:
+#       context: .
+#       dockerfile: frontend/Dockerfile
+#     container_name: buildpay-web
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - gateway
+#     networks:
+#       - buildpay-network
+
+# volumes:
+#   postgres_data:
+#   redis_data:
+
+# networks:
+#   buildpay-network:
+#     driver: bridge
+
+
+
 services:
 
   # ── Infrastructure ──────────────────────────────────────────────────────────
@@ -101,12 +473,13 @@ services:
     networks:
       - buildpay-network
 
-  # ── Monolith API (legacy — proxied by gateway during migration) ─────────────
+  # ── Monolith API (legacy) ──────────────────────────────────────────────────
 
   api:
     build:
       context: .
       dockerfile: BuildPay.API/Dockerfile
+    image: zesolver/buildpay-api:latest
     container_name: buildpay-api
     environment:
       ASPNETCORE_URLS: http://+:8081
@@ -140,6 +513,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.IdentityService/Dockerfile
+    image: zesolver/buildpay-identity:latest
     container_name: buildpay-identity
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -174,6 +548,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.MarketplaceService/Dockerfile
+    image: zesolver/buildpay-marketplace:latest
     container_name: buildpay-marketplace
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -200,6 +575,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.ProjectService/Dockerfile
+    image: zesolver/buildpay-project:latest
     container_name: buildpay-project
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -227,6 +603,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.PaymentService/Dockerfile
+    image: zesolver/buildpay-payment:latest
     container_name: buildpay-payment
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -250,6 +627,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.DeliveryService/Dockerfile
+    image: zesolver/buildpay-delivery:latest
     container_name: buildpay-delivery
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -273,6 +651,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.NotificationService/Dockerfile
+    image: zesolver/buildpay-notification:latest
     container_name: buildpay-notification
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -296,6 +675,7 @@ services:
     build:
       context: .
       dockerfile: services/BuildPay.UserProfileService/Dockerfile
+    image: zesolver/buildpay-userprofile:latest
     container_name: buildpay-userprofile
     environment:
       ASPNETCORE_URLS: http://+:8080
@@ -318,6 +698,7 @@ services:
     build:
       context: .
       dockerfile: BuildPay.Gateway/Dockerfile
+    image: zesolver/buildpay-gateway:latest
     container_name: buildpay-gateway
     environment:
       ASPNETCORE_URLS:             http://+:8082
@@ -352,6 +733,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    image: zesolver/buildpay-web:latest
     container_name: buildpay-web
     ports:
       - "80:80"

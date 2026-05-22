@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Metrics;
@@ -26,6 +27,7 @@ public static class ServiceDefaultsExtensions
         });
 
         builder.Services.AddHealthChecks();
+        builder.Services.AddTransient<IClaimsTransformation, KeycloakRoleClaimsTransformation>();
 
         builder.Services
             .AddOpenTelemetry()
