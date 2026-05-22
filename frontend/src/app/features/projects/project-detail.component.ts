@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 
-export type ProjectDto    = { id: string; name: string; budget: number; status: string; contractorId?: string | null };
+export type ProjectDto    = { id: string; name: string; budget: number; status: string; contractorUserId?: string | null };
 export type MilestoneDto  = { id: string; title: string; amount: number; status: string; dueDate: string };
 export type ExpenseDto    = { id: string; title: string; amount: number; receiptUrl?: string | null; createdAt: string };
 
@@ -82,7 +82,7 @@ export class ProjectDetailComponent {
     if (!this.projectId || this.fundForm.invalid) return;
     this.funding = true;
     const amount = Number(this.fundForm.getRawValue().amount);
-    this.http.post(`/api/payments/projects/${this.projectId}/fund`, { amount }).subscribe({
+    this.http.post(`/api/payments/escrow/fund`, { projectId: this.projectId, amount }).subscribe({
       next:  () => { this.funding = false; this.refresh(); },
       error: (e) => { this.funding = false; this.error = e?.error?.message ?? 'Funding failed'; }
     });
@@ -120,15 +120,23 @@ export class ProjectDetailComponent {
     });
   }
 
-  requestRelease(milestoneId: string) {
-    this.http.post(`/api/payments/milestones/${milestoneId}/request-release`, {}).subscribe({
+  requestRelease(milestoneId: string, amount: number) {
+    if (!this.projectId) return;
+    this.http.post(`/api/payments/milestones/${milestoneId}/request-release`, { projectId: this.projectId, amount }).subscribe({
       next:  () => this.refresh(),
       error: (e) => (this.error = e?.error?.message ?? 'Request failed')
     });
   }
 
   approveRelease(milestoneId: string) {
-    this.http.post(`/api/payments/milestones/${milestoneId}/approve-release`, {}).subscribe({
+    if (!this.projectId) return;
+    const contractorUserId = this.project?.contractorUserId;
+    if (!contractorUserId) {
+      this.error = 'No contractor assigned to this project.';
+      return;
+    }
+
+    this.http.post(`/api/payments/milestones/${milestoneId}/approve`, { projectId: this.projectId, contractorUserId }).subscribe({
       next:  () => this.refresh(),
       error: (e) => (this.error = e?.error?.message ?? 'Approval failed')
     });

@@ -1,9 +1,11 @@
 using BuildPay.Contracts;
+using BuildPay.ServiceDefaults;
+using BuildPay.PaymentService.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using System.Net;
 
 namespace BuildPay.PaymentService.Controllers;
 
@@ -14,17 +16,22 @@ public sealed class PaymentsController : ControllerBase
 {
     private readonly PaymentDbContext _db;
     private readonly IPublishEndpoint _publish;
+    private readonly ProjectAccessClient _projects;
 
-    public PaymentsController(PaymentDbContext db, IPublishEndpoint publish)
+    public PaymentsController(PaymentDbContext db, IPublishEndpoint publish, ProjectAccessClient projects)
     {
         _db = db;
         _publish = publish;
+        _projects = projects;
     }
 
     [HttpPost("escrow/fund")]
     [Authorize(Roles = "Customer,Admin")]
     public async Task<ActionResult<object>> Fund([FromBody] FundEscrowRequest request, CancellationToken ct)
     {
+        var access = await RequireProjectAccess(request.ProjectId, ct);
+        if (access is not null) return access;
+
         if (request.Amount <= 0)
         {
             return BadRequest(new { message = "Funding amount must be greater than zero." });
@@ -56,6 +63,9 @@ public sealed class PaymentsController : ControllerBase
     [Authorize(Roles = "Contractor,Admin")]
     public async Task<ActionResult> RequestRelease([FromRoute] Guid milestoneId, [FromBody] RequestReleaseRequest request, CancellationToken ct)
     {
+        var access = await RequireProjectAccess(request.ProjectId, ct);
+        if (access is not null) return access;
+
         var escrow = await _db.MilestoneEscrows.FirstOrDefaultAsync(m => m.MilestoneId == milestoneId, ct);
         if (escrow is null)
         {
@@ -83,6 +93,9 @@ public sealed class PaymentsController : ControllerBase
     [Authorize(Roles = "Customer,Admin")]
     public async Task<ActionResult<object>> ApproveRelease([FromRoute] Guid milestoneId, [FromBody] ApproveReleaseRequest request, CancellationToken ct)
     {
+        var access = await RequireProjectAccess(request.ProjectId, ct);
+        if (access is not null) return access;
+
         var account = await _db.EscrowAccounts.FirstOrDefaultAsync(a => a.ProjectId == request.ProjectId, ct);
         if (account is null)
         {
@@ -137,6 +150,9 @@ public sealed class PaymentsController : ControllerBase
     [Authorize(Roles = "Customer,Contractor,Admin")]
     public async Task<ActionResult<object>> Balance([FromRoute] Guid projectId, CancellationToken ct)
     {
+        var access = await RequireProjectAccess(projectId, ct);
+        if (access is not null) return access;
+
         var account = await _db.EscrowAccounts.AsNoTracking().FirstOrDefaultAsync(a => a.ProjectId == projectId, ct);
         return Ok(new { projectId, balance = account?.Balance ?? 0m });
     }
@@ -155,8 +171,22 @@ public sealed class PaymentsController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        return UserContext.GetUserId(User);
+    }
+
+    private async Task<ActionResult?> RequireProjectAccess(Guid projectId, CancellationToken ct)
+    {
+        var authHeader = Request.Headers.Authorization.ToString();
+        var status = await _projects.GetAccessStatusAsync(projectId, authHeader, ct);
+
+        return status switch
+        {
+            HttpStatusCode.OK => null,
+            HttpStatusCode.NotFound => NotFound(),
+            HttpStatusCode.Forbidden => Forbid(),
+            HttpStatusCode.Unauthorized => Unauthorized(new { message = "Authentication required. Please sign in." }),
+            _ => StatusCode(502, new { message = "Failed to validate project access." })
+        };
     }
 
     public sealed record FundEscrowRequest(Guid ProjectId, decimal Amount);

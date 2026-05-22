@@ -2,20 +2,23 @@
 <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
   <div class="bp-page-header" style="margin: 0;">
     <h2>Projects</h2>
-    <p>Create and manage your construction projects with milestones and escrow.</p>
+    <p *ngIf="isCustomer">Create and manage your construction projects with milestones and escrow.</p>
+    <p *ngIf="isContractor && !isCustomer">View projects assigned to you.</p>
+    <p *ngIf="isAdmin">View all projects across the platform.</p>
   </div>
+
   <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-    <a routerLink="/contractor/verification" class="bp-btn bp-btn-ghost bp-btn-sm">
-      👷 Contractor Verification
+    <a *ngIf="isContractor" routerLink="/features/contractor/verification" class="bp-btn bp-btn-ghost bp-btn-sm">
+      Contractor Verification
     </a>
-    <button class="bp-btn bp-btn-primary bp-btn-sm" (click)="showForm = !showForm">
-      {{ showForm ? '✕ Cancel' : '+ New Project' }}
+    <button *ngIf="isCustomer" class="bp-btn bp-btn-primary bp-btn-sm" (click)="showForm = !showForm">
+      {{ showForm ? 'Cancel' : '+ New Project' }}
     </button>
   </div>
 </div>
 
-<!-- Create Project Form -->
-<div *ngIf="showForm" class="bp-section bp-fade-in" style="margin-bottom: 1.5rem;">
+<!-- Create Project Form (Customer only) -->
+<div *ngIf="showForm && isCustomer" class="bp-section bp-fade-in" style="margin-bottom: 1.5rem;">
   <div class="bp-section-header">
     <div>
       <h3>New Project</h3>
@@ -45,7 +48,7 @@
         {{ creating ? 'Creating…' : 'Create Project' }}
       </button>
     </form>
-    <div *ngIf="createError" class="bp-alert bp-alert-error" style="margin-top: 1rem;">⚠️ {{ createError }}</div>
+    <div *ngIf="createError" class="bp-alert bp-alert-error" style="margin-top: 1rem;">{{ createError }}</div>
   </div>
 </div>
 
@@ -56,17 +59,27 @@
 </div>
 
 <!-- Error -->
-<div *ngIf="error && !loading" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">⚠️ {{ error }}</div>
+<div *ngIf="error && !loading" class="bp-alert bp-alert-error" style="margin-bottom: 1rem;">{{ error }}</div>
 
 <!-- Empty State -->
 <div *ngIf="!loading && !error && projects.length === 0" class="bp-card">
   <div class="bp-empty-state">
     <div class="bp-empty-icon">📋</div>
-    <h3>No projects yet</h3>
-    <p>Create your first project to start managing milestones and escrow payments.</p>
-    <button class="bp-btn bp-btn-primary" style="margin-top: 1rem;" (click)="showForm = true">
-      + Create First Project
-    </button>
+
+    <ng-container *ngIf="isCustomer; else nonCustomerEmpty">
+      <h3>No projects yet</h3>
+      <p>Create your first project to start managing milestones and escrow payments.</p>
+      <button class="bp-btn bp-btn-primary" style="margin-top: 1rem;" (click)="showForm = true">
+        + Create First Project
+      </button>
+    </ng-container>
+
+    <ng-template #nonCustomerEmpty>
+      <h3 *ngIf="isContractor && !isCustomer">No assigned projects</h3>
+      <p *ngIf="isContractor && !isCustomer">You don’t have any projects assigned yet.</p>
+      <h3 *ngIf="isAdmin">No projects found</h3>
+      <p *ngIf="isAdmin">No projects exist in the system yet.</p>
+    </ng-template>
   </div>
 </div>
 
@@ -84,7 +97,7 @@
       transition: transform 0.15s, box-shadow 0.15s;
     "
     onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--bp-shadow-md)'"
-    onmouseleave="this.style.transform='';this.style.boxShadow=''"
+    onmouseleave="this.style.transform='';this.style.boxShadow='';"
   >
     <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 0;">
@@ -113,7 +126,7 @@
         </div>
         <span class="bp-badge" [ngClass]="statusColor(p.status)">{{ p.status }}</span>
         <span style="font-size: 0.75rem; color: var(--bp-text-muted);">
-          {{ p.contractorId ? '👷 Contractor assigned' : '⏳ No contractor' }}
+          {{ p.contractorUserId ? 'Contractor assigned' : 'No contractor' }}
         </span>
         <span style="color: var(--bp-primary); font-size: 1.125rem;">→</span>
       </div>
@@ -123,5 +136,6 @@
 
 <!-- Refresh -->
 <div *ngIf="!loading && projects.length > 0" style="margin-top: 1rem; text-align: right;">
-  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">Refresh</button>
 </div>
+

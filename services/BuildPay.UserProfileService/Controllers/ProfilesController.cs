@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using BuildPay.ServiceDefaults;
 using System.Security.Claims;
 
 namespace BuildPay.UserProfileService.Controllers;
@@ -76,14 +77,22 @@ public sealed class ProfilesController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        return UserContext.GetUserId(User);
     }
 
     private string GetRole()
     {
-        var roles = User.FindAll("role").Select(r => r.Value).ToList();
-        return roles.Count > 0 ? roles[0] : string.Empty;
+        var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (roles.Count == 0) return string.Empty;
+
+        // Prefer the app roles used throughout the platform.
+        if (roles.Contains("Admin")) return "Admin";
+        if (roles.Contains("Customer")) return "Customer";
+        if (roles.Contains("Contractor")) return "Contractor";
+        if (roles.Contains("Supplier")) return "Supplier";
+        if (roles.Contains("Driver")) return "Driver";
+
+        return roles.First();
     }
 
     public sealed record UpdateProfileRequest(string? DisplayName, string? Bio);
