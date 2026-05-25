@@ -11,7 +11,7 @@ import { ProjectsComponent } from './features/projects/projects.component';
 import { ProjectDetailComponent } from './features/projects/project-detail.component';
 import { OrdersComponent } from './features/orders/orders.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
-import { AdminComponent } from './features/admin/admin.component';
+// import { AdminComponent } from './features/admin/admin.component';
 import { ContractorVerificationComponent } from './features/contractor/contractor-verification.component';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
@@ -64,12 +64,12 @@ export const routes: Routes = [
       },
 
       // Role-restricted (legacy paths kept for compatibility)
-      {
-        path: 'admin',
-        component: AdminComponent,
-        canActivate: [authGuard, roleGuard],
-        data: { roles: ['Admin'] }
-      },
+      // {
+      //   path: 'admin',
+      //   component: AdminComponent,
+      //   canActivate: [authGuard, roleGuard],
+      //   data: { roles: ['Admin'] }
+      // },
       {
         path: 'contractor/verification',
         component: ContractorVerificationComponent,

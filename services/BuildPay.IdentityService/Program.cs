@@ -37,6 +37,8 @@ builder.Services.AddMassTransit(x =>
     x.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host(builder.Configuration.GetConnectionString("RabbitMq"));
+        cfg.Message<BuildPay.Contracts.IdentityContractorVerified>(m => m.SetEntityName("identity.events"));
+        cfg.Message<BuildPay.Contracts.IdentityContractorRejected>(m => m.SetEntityName("identity.events"));
     });
 });
 
