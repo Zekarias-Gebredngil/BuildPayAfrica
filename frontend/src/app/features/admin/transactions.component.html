@@ -1,0 +1,35 @@
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  <div class="bp-page-header" style="margin:0;"><h2>💳 Transactions</h2><p>Wallet transactions and escrow credits.</p></div>
+  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+</div>
+
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<div *ngIf="!loading()" class="bp-fade-in">
+  <div class="bp-section">
+    <div class="bp-section-header">
+      <div><h3>Wallet Transactions</h3><p>All escrow credits and debits.</p></div>
+      <div style="font-size:0.875rem;font-weight:600;">Total Credits: KES {{ totalRevenue | number:'1.0-0' }}</div>
+    </div>
+    <div *ngIf="transactions().length === 0" class="bp-empty-state" style="padding:2rem;">
+      <div class="bp-empty-icon">💳</div><h3>No transactions yet</h3>
+    </div>
+    <div *ngIf="transactions().length > 0" style="overflow-x:auto;">
+      <table class="bp-table">
+        <thead><tr><th>ID</th><th>Project</th><th>Amount</th><th>Type</th><th>Date</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let t of transactions()">
+            <td style="font-family:monospace;font-size:0.75rem;">{{ t.id | slice:0:8 }}…</td>
+            <td style="font-family:monospace;font-size:0.75rem;">{{ t.projectId | slice:0:8 }}…</td>
+            <td style="font-weight:600;" [style.color]="t.direction === 'Credit' ? 'var(--bp-success)' : 'var(--bp-danger)'">
+              {{ t.direction === 'Credit' ? '+' : '-' }}KES {{ t.amount | number:'1.0-0' }}
+            </td>
+            <td><span class="bp-badge" [ngClass]="t.direction === 'Credit' ? 'bp-badge-green' : 'bp-badge-red'">{{ t.direction }}</span></td>
+            <td style="color:var(--bp-text-muted);">{{ t.createdAtUtc | date:'mediumDate' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
