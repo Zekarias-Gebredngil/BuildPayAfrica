@@ -32,7 +32,14 @@ export class ContractorDashboardComponent {
     });
   }
 
-  get verificationStatus() { return this.verification()?.status ?? 'Not submitted'; }
+  get verificationStatus() { 
+    const s = this.verification()?.status;
+    const str = String(s);
+    if (str === '0') return 'Pending';
+    if (str === '1') return 'Approved';
+    if (str === '2') return 'Rejected';
+    return s ?? 'Not submitted'; 
+  }
   get isVerified()         { return this.verificationStatus === 'Approved'; }
   get unreadCount()        { return this.notifications().length; }
 }

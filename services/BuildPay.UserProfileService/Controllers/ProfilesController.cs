@@ -26,6 +26,19 @@ public sealed class ProfilesController : ControllerBase
         return Ok(profile ?? new UserProfile { UserId = userId, Role = GetRole(), DisplayName = string.Empty });
     }
 
+    [HttpGet]
+    public async Task<ActionResult<List<UserProfile>>> GetProfiles([FromQuery] string? role, CancellationToken ct)
+    {
+        var query = _db.Profiles.AsNoTracking().AsQueryable();
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            query = query.Where(p => p.Role == role);
+        }
+        
+        var profiles = await query.ToListAsync(ct);
+        return Ok(profiles);
+    }
+
     [HttpPut("me")]
     public async Task<ActionResult> UpdateMe([FromBody] UpdateProfileRequest request, CancellationToken ct)
     {
@@ -98,4 +111,3 @@ public sealed class ProfilesController : ControllerBase
     public sealed record UpdateProfileRequest(string? DisplayName, string? Bio);
     public sealed record RateRequest(int Score, string? Comment);
 }
-

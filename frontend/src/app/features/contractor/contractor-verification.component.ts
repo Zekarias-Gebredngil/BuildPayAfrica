@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { catchError, of, forkJoin, map, switchMap } from 'rxjs';
 
 interface VerificationStatus {
   id: string; status: string; licenceNumber: string;
@@ -24,10 +25,10 @@ export class ContractorVerificationComponent {
   success   = signal(false);
   error     = signal<string | null>(null);
 
+  selectedFiles = new Map<string, File>();
+
   form = this.fb.group({
-    licenceNumber: ['', [Validators.required, Validators.maxLength(50)]],
-    doc1: ['', [Validators.required]],
-    doc2: ['']
+    licenceNumber: ['', [Validators.required, Validators.maxLength(50)]]
   });
 
   constructor() { this.loadStatus(); }
@@ -40,24 +41,62 @@ export class ContractorVerificationComponent {
     });
   }
 
+  onFileSelect(event: Event, key: string) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.selectedFiles.set(key, input.files[0]);
+    } else {
+      this.selectedFiles.delete(key);
+    }
+  }
+
+  private uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>('/api/files', formData).pipe(map(res => res.url));
+  }
+
   submit() {
     if (this.form.invalid) return;
-    const v = this.form.getRawValue();
-    const documentUrls = [v.doc1!, ...(v.doc2 ? [v.doc2] : [])];
+    const doc1 = this.selectedFiles.get('doc1');
+    if (!doc1) {
+      this.error.set('Licence document is required.');
+      return;
+    }
 
     this.submitting.set(true);
     this.error.set(null);
 
-    this.http.post('/api/contractors/verifications', {
-      licenceNumber: v.licenceNumber,
-      documentUrls
-    }).subscribe({
+    const uploads = [this.uploadFile(doc1)];
+    const doc2 = this.selectedFiles.get('doc2');
+    if (doc2) uploads.push(this.uploadFile(doc2));
+
+    forkJoin(uploads).pipe(
+      switchMap(urls => {
+        return this.http.post('/api/contractors/verifications', {
+          licenceNumber: this.form.value.licenceNumber,
+          documentUrls: urls
+        });
+      })
+    ).subscribe({
       next: () => { this.submitting.set(false); this.success.set(true); this.loadStatus(); },
       error: (e) => { this.submitting.set(false); this.error.set(e?.error?.message ?? 'Submission failed'); }
     });
   }
 
+  get mappedStatus() {
+    const s = this.existing()?.status;
+    const str = String(s);
+    if (str === '0') return 'Pending';
+    if (str === '1') return 'Approved';
+    if (str === '2') return 'Rejected';
+    return s ?? 'Not submitted';
+  }
+
   statusBadge(s: string) {
-    return s === 'Approved' ? 'bp-badge-green' : s === 'Rejected' ? 'bp-badge-red' : 'bp-badge-yellow';
+    const str = String(s);
+    if (str === '1' || str === 'Approved') return 'bp-badge-green';
+    if (str === '2' || str === 'Rejected') return 'bp-badge-red';
+    return 'bp-badge-yellow';
   }
 }
