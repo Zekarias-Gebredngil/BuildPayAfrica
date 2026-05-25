@@ -1,10 +1,11 @@
 <!-- Header -->
 <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
   <div class="bp-page-header" style="margin:0;">
-    <h2>🏗️ My Projects</h2>
-    <p>Create and manage your construction projects, milestones, and escrow payments.</p>
+    <h2>🏗️ {{ isContractor && !isCustomer ? 'Assigned Projects' : 'My Projects' }}</h2>
+    <p *ngIf="isCustomer">Create and manage your construction projects, milestones, and escrow payments.</p>
+    <p *ngIf="isContractor && !isCustomer">View projects assigned to you.</p>
   </div>
-  <button class="bp-btn bp-btn-primary" (click)="showCreateForm.set(!showCreateForm())">
+  <button *ngIf="isCustomer" class="bp-btn bp-btn-primary" (click)="showCreateForm.set(!showCreateForm())">
     {{ showCreateForm() ? '✕ Cancel' : '+ New Project' }}
   </button>
 </div>
@@ -54,11 +55,17 @@
 <div *ngIf="!loading() && projects().length === 0 && !error()" class="bp-card">
   <div class="bp-empty-state">
     <div class="bp-empty-icon">🏗️</div>
-    <h3>No projects yet</h3>
-    <p>Create your first project to start managing milestones and escrow payments.</p>
-    <button class="bp-btn bp-btn-primary" style="margin-top:1rem;" (click)="showCreateForm.set(true)">
-      + Create First Project
-    </button>
+    <ng-container *ngIf="isCustomer">
+      <h3>No projects yet</h3>
+      <p>Create your first project to start managing milestones and escrow payments.</p>
+      <button class="bp-btn bp-btn-primary" style="margin-top:1rem;" (click)="showCreateForm.set(true)">
+        + Create First Project
+      </button>
+    </ng-container>
+    <ng-container *ngIf="isContractor && !isCustomer">
+      <h3>No assigned projects</h3>
+      <p>You don't have any projects assigned yet.</p>
+    </ng-container>
   </div>
 </div>
 
@@ -103,7 +110,7 @@
           <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="openProject(p.id)" title="Open project">
             Open →
           </button>
-          <button *ngIf="p.status === 'Draft' || p.status === 'Cancelled'"
+          <button *ngIf="isCustomer && (p.status === 'Draft' || p.status === 'Cancelled')"
                   class="bp-btn bp-btn-danger bp-btn-sm"
                   (click)="confirmDelete(p.id); $event.stopPropagation()"
                   title="Delete project">
