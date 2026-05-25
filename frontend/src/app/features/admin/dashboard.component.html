@@ -1,0 +1,77 @@
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  <div class="bp-page-header" style="margin:0;"><h2>⚙️ Admin Dashboard</h2><p>Platform overview and system health.</p></div>
+  <button class="bp-btn bp-btn-ghost bp-btn-sm" (click)="load()">↻ Refresh</button>
+</div>
+
+<div *ngIf="loading()" class="bp-loading-state"><div class="bp-spinner"></div> Loading…</div>
+<div *ngIf="error()" class="bp-alert bp-alert-error" style="margin-bottom:1rem;">⚠️ {{ error() }}</div>
+
+<div *ngIf="!loading() && overview()">
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="stat-label">Users</div><div class="stat-value">{{ overview()!.users | number }}</div></div>
+        <div class="stat-icon" style="background:#dbeafe;color:#1d4ed8;">👥</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div class="stat-label">Pending Verifications</div>
+          <div class="stat-value" [style.color]="overview()!.contractorsPending > 0 ? 'var(--bp-warning)' : 'inherit'">{{ overview()!.contractorsPending }}</div>
+        </div>
+        <div class="stat-icon" style="background:#fef3c7;color:#92400e;">⏳</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="stat-label">Projects</div><div class="stat-value">{{ overview()!.projects | number }}</div></div>
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46;">🏗️</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="stat-label">Orders</div><div class="stat-value">{{ overview()!.orders | number }}</div></div>
+        <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;">📦</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="stat-label">Products</div><div class="stat-value">{{ overview()!.products | number }}</div></div>
+        <div class="stat-icon" style="background:#fce7f3;color:#9d174d;">🏪</div>
+      </div>
+    </div>
+    <div class="bp-stat-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="stat-label">Deliveries</div><div class="stat-value">{{ overview()!.deliveries | number }}</div></div>
+        <div class="stat-icon" style="background:#ecfdf5;color:#065f46;">🚚</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bp-fade-in">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div class="bp-section">
+        <div class="bp-section-header"><div><h3>System Health</h3></div><span class="bp-badge bp-badge-green">● Operational</span></div>
+        <div class="bp-section-body" style="display:flex;flex-direction:column;gap:0.875rem;">
+          <div *ngFor="let svc of [['API Gateway','green'],['Identity Service','green'],['Marketplace Service','green'],['Payment Service','green'],['Delivery Service','green'],['Notification Service','green']]"
+               style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.875rem;">{{ svc[0] }}</span>
+            <span class="bp-badge" [ngClass]="'bp-badge-' + svc[1]">{{ svc[1] === 'green' ? 'Healthy' : 'Degraded' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="bp-section">
+        <div class="bp-section-header"><h3>Quick Actions</h3></div>
+        <div class="bp-section-body" style="display:flex;flex-direction:column;gap:0.75rem;">
+          <a routerLink="/features/admin/verifications" class="bp-btn bp-btn-ghost" style="justify-content:flex-start;">✅ Review Verifications ({{ overview()!.contractorsPending }})</a>
+          <a routerLink="/features/admin/transactions" class="bp-btn bp-btn-ghost" style="justify-content:flex-start;">💳 View Transactions</a>
+          <a routerLink="/features/admin/escrow" class="bp-btn bp-btn-ghost" style="justify-content:flex-start;">🔒 Escrow Monitoring</a>
+          <button class="bp-btn bp-btn-ghost" style="justify-content:flex-start;" (click)="load()">↻ Refresh All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

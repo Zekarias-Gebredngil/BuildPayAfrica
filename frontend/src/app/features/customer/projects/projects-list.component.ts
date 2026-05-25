@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProjectDto } from './project.models';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-customer-projects',
@@ -15,6 +16,10 @@ export class CustomerProjectsComponent {
   private readonly http   = inject(HttpClient);
   private readonly fb     = inject(FormBuilder);
   private readonly router = inject(Router);
+  readonly auth           = inject(AuthService);
+
+  get isCustomer() { return this.auth.roles.includes('Customer'); }
+  get isContractor() { return this.auth.roles.includes('Contractor'); }
 
   projects = signal<ProjectDto[]>([]);
   loading  = signal(true);
@@ -37,7 +42,12 @@ export class CustomerProjectsComponent {
   load() {
     this.loading.set(true);
     this.error.set(null);
-    this.http.get<ProjectDto[]>('/api/projects/my').subscribe({
+    
+    const url = this.isContractor && !this.isCustomer 
+      ? '/api/projects/assigned' 
+      : '/api/projects/my';
+
+    this.http.get<ProjectDto[]>(url).subscribe({
       next:  (res) => { this.projects.set(res); this.loading.set(false); },
       error: (e)   => { this.loading.set(false); this.error.set(e?.error?.message ?? 'Failed to load projects'); }
     });
@@ -64,7 +74,11 @@ export class CustomerProjectsComponent {
   }
 
   openProject(id: string) {
-    this.router.navigate(['/features/customer/projects', id]);
+    if (this.isContractor && !this.isCustomer) {
+      this.router.navigate(['/features/contractor/projects', id]);
+    } else {
+      this.router.navigate(['/features/customer/projects', id]);
+    }
   }
 
   confirmDelete(id: string) { this.deletingId.set(id); }
