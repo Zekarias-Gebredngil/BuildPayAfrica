@@ -9,14 +9,13 @@
       <div style="font-size:0.75rem;color:var(--bp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.375rem;">Current Status</div>
       <div style="display:flex;align-items:center;gap:0.75rem;">
         <span class="bp-badge" style="font-size:0.875rem;padding:0.375rem 1rem;" [ngClass]="statusBadge(existing()!.status)">
-          {{ existing()!.status }}
+          {{ mappedStatus }}
         </span>
         <span style="font-size:0.875rem;color:var(--bp-text-muted);">Licence: {{ existing()!.licenceNumber }}</span>
       </div>
       <div *ngIf="existing()!.rejectionReason" class="bp-alert bp-alert-error" style="margin-top:0.75rem;">
         ❌ Rejection reason: {{ existing()!.rejectionReason }}
       </div>
-    </div>
     <div *ngIf="existing()!.documentUrls?.length" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
       <a *ngFor="let url of existing()!.documentUrls; let i = index"
          [href]="url" target="_blank" rel="noopener" class="bp-btn bp-btn-ghost bp-btn-sm">
@@ -49,14 +48,12 @@
               style="font-size:0.75rem;color:var(--bp-danger);">Licence number is required.</span>
       </div>
       <div class="bp-form-group">
-        <label class="bp-label">Licence Document URL *</label>
-        <input class="bp-input" formControlName="doc1" placeholder="https://s3.amazonaws.com/…" />
-        <span *ngIf="form.get('doc1')?.invalid && form.get('doc1')?.touched"
-              style="font-size:0.75rem;color:var(--bp-danger);">At least one document URL is required.</span>
+        <label class="bp-label">Licence Document *</label>
+        <input type="file" class="bp-input" (change)="onFileSelect($event, 'doc1')" accept=".pdf,.png,.jpg,.jpeg" />
       </div>
       <div class="bp-form-group">
-        <label class="bp-label">ID Document URL (optional)</label>
-        <input class="bp-input" formControlName="doc2" placeholder="https://s3.amazonaws.com/…" />
+        <label class="bp-label">ID Document (optional)</label>
+        <input type="file" class="bp-input" (change)="onFileSelect($event, 'doc2')" accept=".pdf,.png,.jpg,.jpeg" />
       </div>
       <div *ngIf="error()" class="bp-alert bp-alert-error">⚠️ {{ error() }}</div>
       <button type="submit" class="bp-btn bp-btn-primary" style="align-self:flex-start;padding:0.75rem 2rem;"

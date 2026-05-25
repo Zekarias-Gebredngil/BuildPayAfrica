@@ -106,6 +106,37 @@
     </div>
   </div>
 
+  <!-- Verified Contractors -->
+  <div class="bp-section" style="margin-top:1.5rem;">
+    <div class="bp-section-header">
+      <div><h3>Verified Contractors</h3></div>
+      <a routerLink="/features/customer/contractors" class="bp-btn bp-btn-ghost bp-btn-sm">Find more →</a>
+    </div>
+    <div class="bp-section-body" style="padding:0;">
+      <div *ngIf="verifiedContractors().length === 0" class="bp-empty-state" style="padding:2rem;">
+        <div class="bp-empty-icon">👷</div>
+        <h3>No contractors available</h3>
+      </div>
+      <div *ngIf="verifiedContractors().length > 0" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;padding:1.5rem;">
+        <div *ngFor="let c of verifiedContractors()" class="bp-card" style="padding:1rem;display:flex;gap:1rem;align-items:center;">
+          <div class="bp-avatar" style="width:3rem;height:3rem;font-size:1.125rem;background:var(--bp-primary-light);color:var(--bp-primary);display:flex;align-items:center;justify-content:center;border-radius:50%;">
+            {{ c.displayName ? c.displayName[0].toUpperCase() : '?' }}
+          </div>
+          <div style="flex:1;overflow:hidden;">
+            <div style="font-weight:600;margin-bottom:0.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.displayName || 'Unnamed Contractor' }}</div>
+            <div style="font-size:0.75rem;color:var(--bp-text-muted);margin-bottom:0.25rem;">
+              <span style="color:#f59e0b;">{{ stars(c.ratingAverage) }}</span>
+              ({{ c.ratingCount }})
+            </div>
+            <div *ngIf="c.bio" style="font-size:0.8125rem;color:var(--bp-text-muted);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;">
+              {{ c.bio }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick Actions -->
   <div class="bp-card" style="padding:1.5rem;margin-top:1.5rem;">
     <h3 style="font-size:1rem;font-weight:600;margin:0 0 1rem;">Quick Actions</h3>
