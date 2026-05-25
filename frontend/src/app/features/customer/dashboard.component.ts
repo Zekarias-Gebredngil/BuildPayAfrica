@@ -20,18 +20,27 @@ export class CustomerDashboardComponent {
   projects = signal<any[]>([]);
   notifications = signal<any[]>([]);
   recentOrders = signal<any[]>([]);
+  verifiedContractors = signal<any[]>([]);
 
   readonly displayName = this.auth.displayName$;
 
-  constructor() {
+    constructor() {
     forkJoin({
       projects: this.http.get<any[]>('/api/projects/my').pipe(catchError(() => of([]))),
       notifications: this.http.get<any[]>('/api/notifications').pipe(catchError(() => of([]))),
-      orders: this.http.get<any[]>('/api/orders/history').pipe(catchError(() => of([])))
-    }).subscribe(({ projects, notifications, orders }) => {
+      orders: this.http.get<any[]>('/api/orders/history').pipe(catchError(() => of([]))),
+      contractors: this.http.get<any[]>('/api/contractors').pipe(catchError(() => of([])))
+    }).subscribe(({ projects, notifications, orders, contractors }) => {
       this.projects.set(projects);
       this.notifications.set(notifications.filter((n: any) => !n.read).slice(0, 5));
       this.recentOrders.set(orders.slice(0, 3));
+      this.verifiedContractors.set(contractors.slice(0, 4).map(c => ({
+        userId: c.userId,
+        displayName: c.fullName,
+        ratingAverage: c.rating,
+        ratingCount: 0,
+        bio: 'Verified Contractor'
+      })));
       this.loading.set(false);
     });
   }
@@ -39,4 +48,6 @@ export class CustomerDashboardComponent {
   get activeProjects() { return this.projects().filter(p => p.status === 'Active').length; }
   get draftProjects()  { return this.projects().filter(p => p.status === 'Draft').length; }
   get unreadCount()    { return this.notifications().length; }
+
+  stars(avg: number): string { return '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg)); }
 }

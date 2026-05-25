@@ -29,7 +29,25 @@ public sealed class ContractorsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("verification")]
+    [HttpGet("verifications/me")]
+    [Authorize(Roles = "Contractor,Admin")]
+    public async Task<ActionResult<VerificationStatusDto>> GetMyVerification(CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        var result = await _mediator.Send(new GetMyVerificationQuery(userId), cancellationToken);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpGet("verifications/pending")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<List<PendingVerificationDto>>> GetPendingVerifications(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetPendingVerificationsQuery(), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("verifications")]
     [Authorize(Roles = "Contractor,Admin")]
     public async Task<ActionResult<object>> SubmitVerification([FromBody] SubmitVerificationRequest request, CancellationToken cancellationToken)
     {
@@ -38,14 +56,14 @@ public sealed class ContractorsController : ControllerBase
         var contractorId = await _mediator.Send(
             new SubmitContractorVerificationCommand(
                 userId,
-                request.LicenseNumber,
-                request.Documents.Select(d => new SubmitContractorDocument(d.DocumentType, d.FileUrl)).ToList()),
+                request.LicenceNumber,
+                request.DocumentUrls.Select(url => new SubmitContractorDocument(ContractorDocumentType.License, url)).ToList()),
             cancellationToken);
 
         return Ok(new { contractorId });
     }
 
-    [HttpPut("{contractorId:guid}/verification-status")]
+    [HttpPut("verifications/{contractorId:guid}/status")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> SetStatus(Guid contractorId, [FromBody] SetVerificationStatusRequest request, CancellationToken cancellationToken)
     {
@@ -58,10 +76,8 @@ public sealed class ContractorsController : ControllerBase
         return NoContent();
     }
 
-    public sealed record SubmitVerificationRequest(string LicenseNumber, List<SubmitDocumentRequest> Documents);
+    public sealed record SubmitVerificationRequest(string LicenceNumber, List<string> DocumentUrls);
 
-    public sealed record SubmitDocumentRequest(ContractorDocumentType DocumentType, string FileUrl);
-
-    public sealed record SetVerificationStatusRequest(VerificationStatus Status);
+    public sealed record SetVerificationStatusRequest(VerificationStatus Status, string RejectionReason = "");
 }
 
