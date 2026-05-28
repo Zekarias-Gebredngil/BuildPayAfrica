@@ -20,6 +20,8 @@ export class InventoryComponent {
   categories = signal<Category[]>([]);
   loading    = signal(true);
   error      = signal<string | null>(null);
+  categoriesLoading = signal(false);
+  categoriesError = signal<string | null>(null);
   showForm   = signal(false);
   creating   = signal(false);
   createError = signal<string | null>(null);
@@ -40,8 +42,16 @@ export class InventoryComponent {
       next: (p) => { this.products.set(p); this.loading.set(false); },
       error: () => { this.loading.set(false); this.error.set('Failed to load products'); }
     });
+
+    this.categoriesLoading.set(true);
+    this.categoriesError.set(null);
     this.http.get<Category[]>('/api/categories').subscribe({
-      next: (c) => this.categories.set(c), error: () => {}
+      next: (c) => { this.categories.set(c); this.categoriesLoading.set(false); },
+      error: () => {
+        this.categories.set([]);
+        this.categoriesLoading.set(false);
+        this.categoriesError.set('Failed to load categories. Please refresh or contact an administrator.');
+      }
     });
   }
 
