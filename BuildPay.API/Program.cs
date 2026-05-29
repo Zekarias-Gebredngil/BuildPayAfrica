@@ -6,6 +6,7 @@ using BuildPay.Application.Products.Commands;
 using BuildPay.Application.Common.Interfaces;
 using BuildPay.Infrastructure.Keycloak;
 using BuildPay.Persistence;
+using BuildPay.Persistence.Configuration;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -35,8 +36,12 @@ builder.Services.AddCors(options =>
             .SetIsOriginAllowed(_ => true));
 });
 
+var defaultConnectionString =
+    RailwayPostgresConnectionString.FromRailwayEnvironment(Environment.GetEnvironmentVariable) ??
+    builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<BuildPayDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.UseNpgsql(defaultConnectionString,
         b => b.MigrationsAssembly("BuildPay.Persistence")));
 builder.Services.AddScoped<IBuildPayDbContext>(provider => provider.GetRequiredService<BuildPayDbContext>());
 
