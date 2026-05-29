@@ -1,22 +1,21 @@
 <div style="
-  min-height: calc(100vh - 8rem);
+  min-height: calc(80vh - 10rem);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 1rem 0.75rem;
 ">
-  <div style="width: 100%; max-width: 520px;" class="bp-fade-in">
-    <div class="bp-card" style="padding: 2.5rem;">
+  <div style="width: 100%; max-width: 620px;" class="bp-fade-in">
+    <div class="bp-card" style="padding: 1.5rem;">
 
       <!-- Header -->
-      <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="text-align: center; margin-bottom: 0.5rem;">
         <div style="
-          width: 3.5rem; height: 3.5rem; border-radius: 1rem;
-          background: var(--bp-primary);
+          width: 9.5rem; height: 9.5rem; border-radius: 0.01rem;
+          background: transparent;
           display: flex; align-items: center; justify-content: center;
-          color: #fff; font-weight: 800; font-size: 1.125rem;
-          margin: 0 auto 1rem;
-        ">BP</div>
+          margin: 0 auto 0.01rem;
+        "><img src="images/BPA logo1.png" alt="BuildPay Africa"></div>
         <h1 style="font-size: 1.5rem; font-weight: 700; margin: 0 0 0.375rem;">Create your account</h1>
         <p style="font-size: 0.875rem; color: var(--bp-text-muted); margin: 0;">Join BuildPay Africa — it's free</p>
       </div>
@@ -31,7 +30,7 @@
       <form *ngIf="!success" [formGroup]="form" (ngSubmit)="submit()" style="display: flex; flex-direction: column; gap: 1.25rem;">
 
         <!-- Full Name -->
-        <div class="bp-form-group">
+        <!-- <div class="bp-form-group">
           <label class="bp-label" for="fullName">Full name</label>
           <input id="fullName" class="bp-input" type="text" formControlName="fullName"
                  placeholder="John Doe" autocomplete="name" />
@@ -39,10 +38,10 @@
                 style="font-size: 0.75rem; color: var(--bp-danger);">
             Full name must be at least 2 characters.
           </span>
-        </div>
+        </div> -->
 
         <!-- Email -->
-        <div class="bp-form-group">
+        <!-- <div class="bp-form-group">
           <label class="bp-label" for="reg-email">Email address</label>
           <input id="reg-email" class="bp-input" type="email" formControlName="email"
                  placeholder="you@example.com" autocomplete="email" />
@@ -50,57 +49,222 @@
                 style="font-size: 0.75rem; color: var(--bp-danger);">
             Please enter a valid email address.
           </span>
-        </div>
-
-        <!-- Password -->
-        <div class="bp-form-group">
-          <label class="bp-label" for="reg-password">Password</label>
-          <div style="position: relative;">
-            <input id="reg-password" class="bp-input"
-                   [type]="showPassword() ? 'text' : 'password'"
-                   formControlName="password"
-                   placeholder="At least 6 characters"
-                   autocomplete="new-password"
-                   style="padding-right: 3rem;" />
-            <button type="button" (click)="togglePassword()" style="
-              position: absolute; right: 0.75rem; top: 50%;
-              transform: translateY(-50%);
-              background: none; border: none; cursor: pointer;
-              color: var(--bp-text-muted); font-size: 1rem; padding: 0;
-            ">{{ showPassword() ? '🙈' : '👁️' }}</button>
+        </div> -->
+        <!-- Name + Email -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          
+          <!-- Full Name -->
+          <div class="bp-form-group">
+            <label class="bp-label" for="fullName">Full name</label>
+            <input id="fullName" class="bp-input" type="text" formControlName="fullName"
+                   placeholder="John Doe" autocomplete="name" />
+        
+            <span *ngIf="form.get('fullName')?.invalid && form.get('fullName')?.touched"
+                  style="font-size: 0.75rem; color: var(--bp-danger);">
+              Full name must be at least 2 characters.
+            </span>
           </div>
-          <span *ngIf="form.get('password')?.invalid && form.get('password')?.touched"
-                style="font-size: 0.75rem; color: var(--bp-danger);">
-            Password must be at least 6 characters.
-          </span>
+        
+          <!-- Email -->
+          <div class="bp-form-group">
+            <label class="bp-label" for="reg-email">Email address</label>
+            <input id="reg-email" class="bp-input" type="email" formControlName="email"
+                   placeholder="you@example.com" autocomplete="email" />
+        
+            <span *ngIf="form.get('email')?.invalid && form.get('email')?.touched"
+                  style="font-size: 0.75rem; color: var(--bp-danger);">
+              Please enter a valid email address.
+            </span>
+          </div>
+        
         </div>
+        <!-- Password + Confirm Password -->
 
-        <!-- Role Selection -->
-        <div class="bp-form-group">
-          <label class="bp-label">I am a…</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem;">
-            <button
-              *ngFor="let r of roles"
-              type="button"
-              (click)="selectRole(r.value)"
-              [style.border-color]="form.value.role === r.value ? 'var(--bp-primary)' : 'var(--bp-border)'"
-              [style.background]="form.value.role === r.value ? 'var(--bp-primary-light)' : '#fff'"
+        <!-- Password + Confirm Password -->
+        <div style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 1rem;
+        ">
+        
+          <!-- Password -->
+          <div class="bp-form-group">
+            <label class="bp-label" for="reg-password">
+              Password
+            </label>
+        
+            <div style="position: relative;">
+        
+              <input
+                id="reg-password"
+                class="bp-input"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="At least 8 characters"
+                autocomplete="new-password"
+                style="padding-right: 3rem;"
+              />
+        
+              <!-- Visibility Toggle -->
+              <button
+                type="button"
+                (click)="togglePassword()"
+                style="
+                  position: absolute;
+                  right: 0.75rem;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  color: var(--bp-text-muted);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 0;
+                "
+              >
+                <span class="material-icons" style="font-size: 1.2rem;">
+                  {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+        
+            </div>
+        
+            <span
+              *ngIf="form.get('password')?.invalid && form.get('password')?.touched"
               style="
-                padding: 0.875rem 0.75rem;
-                border-radius: 0.625rem;
-                border: 2px solid;
-                cursor: pointer;
-                text-align: left;
-                transition: all 0.15s;
+                font-size: 0.75rem;
+                color: var(--bp-danger);
               "
             >
-              <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">{{ r.icon }}</div>
-              <div style="font-size: 0.875rem; font-weight: 600; color: var(--bp-text);">{{ r.label }}</div>
-              <div style="font-size: 0.7rem; color: var(--bp-text-muted); margin-top: 0.125rem; line-height: 1.4;">{{ r.desc }}</div>
-            </button>
+              Password must be at least 8 characters.
+            </span>
+          </div>
+        
+          <!-- Confirm Password -->
+          <!-- <div class="bp-form-group">
+            <label class="bp-label" for="confirm-password">
+              Confirm Password
+            </label>
+        
+            <div style="position: relative;">
+        
+              <input
+                id="confirm-password"
+                class="bp-input"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                placeholder="Confirm password"
+                autocomplete="new-password"
+                style="padding-right: 3rem;"
+              />
+        
+            
+              <button
+                type="button"
+                (click)="togglePassword()"
+                style="
+                  position: absolute;
+                  right: 0.75rem;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  color: var(--bp-text-muted);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 0;
+                "
+              >
+                <span class="material-icons" style="font-size: 1.2rem;">
+                  {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+        
+            </div>
+        
+            <span
+              *ngIf="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched"
+              style="
+                font-size: 0.75rem;
+                color: var(--bp-danger);
+              "
+            >
+              Passwords must match.
+            </span>
+          </div> -->
+        
+        </div>
+        <!-- Role Selection -->
+        <div class="bp-form-group">
+          <label class="bp-label">I am a… <span style="color: var(--bp-danger);">*</span></label>
+        
+          <div style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+          ">
+        
+            <label
+              *ngFor="let r of roles"
+              style="
+                display: flex;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 1rem;
+                border-radius: 0.75rem;
+                border: 2px solid var(--bp-border);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                background: #fff;
+              "
+              [style.border-color]="form.value.role === r.value ? 'var(--bp-primary)' : 'var(--bp-border)'"
+              [style.background]="form.value.role === r.value ? 'var(--bp-primary-light)' : '#fff'"
+            >
+        
+              <!-- Radio -->
+              <input
+                type="radio"
+                formControlName="role"
+                [value]="r.value"
+                style="
+                  margin-top: 0.25rem;
+                  accent-color: var(--bp-primary);
+                  cursor: pointer;
+                "
+              />
+        
+              <!-- Content -->
+              <div>
+                <div style="font-size: 1.3rem; margin-bottom: 0.25rem;">
+                  {{ r.icon }}
+                </div>
+        
+                <div style="
+                  font-size: 0.9rem;
+                  font-weight: 600;
+                  color: var(--bp-text);
+                ">
+                  {{ r.label }}
+                </div>
+        
+                <div style="
+                  font-size: 0.75rem;
+                  color: var(--bp-text-muted);
+                  margin-top: 0.2rem;
+                  line-height: 1.4;
+                ">
+                  {{ r.desc }}
+                </div>
+              </div>
+        
+            </label>
+        
           </div>
         </div>
-
         <!-- Error -->
         <div *ngIf="error" class="bp-alert bp-alert-error">⚠️ {{ error }}</div>
 
