@@ -63,13 +63,20 @@
       </div>
 
       <button type="button" (click)="logout()" class="bp-btn bp-btn-ghost bp-btn-sm header-signout">
+        <mat-icon aria-hidden="true">logout</mat-icon>
         Sign out
       </button>
     </div>
 
     <div *ngIf="!isAuthed()" class="public-header-actions">
-      <a routerLink="/login" class="bp-btn bp-btn-primary bp-btn-sm">Sign in</a>
-      <a routerLink="/register" class="bp-btn bp-btn-secondary bp-btn-sm">Register</a>
+      <a routerLink="/login" class="bp-btn bp-btn-primary bp-btn-sm">
+        <mat-icon aria-hidden="true">login</mat-icon>
+        Sign in
+      </a>
+      <a routerLink="/register" class="bp-btn bp-btn-secondary bp-btn-sm">
+        <mat-icon aria-hidden="true">person_add</mat-icon>
+        Register
+      </a>
     </div>
 
     <button
